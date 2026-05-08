@@ -19,9 +19,10 @@ local MODULE_ID = "GodPool"
 local PLUGIN_GUID = _PLUGIN.guid
 ---@class RunDirectorGodPoolInternal
 ---@field store ManagedStore|nil
+---@field host AuthorHost|nil
 ---@field standaloneUi StandaloneRuntime|nil
 ---@field RegisterHooks fun()|nil
----@field RegisterIntegrations fun()|nil
+---@field RegisterIntegrations fun(host: AuthorHost)|nil
 ---@field DrawTab fun(imgui: table, session: AuthorSession)|nil
 ---@field DrawQuickContent fun(imgui: table, session: AuthorSession)|nil
 ---@field IsGodEnabledInPool fun(godKey: string): boolean|nil
@@ -52,31 +53,25 @@ local function init()
     import("mods/integrations.lua")
     import("mods/ui.lua")
 
-    local definition = lib.prepareDefinition(internal, {
-        modpack = PACK_ID,
-        id = MODULE_ID,
-        name = "God Pool",
-        tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
-        affectsRunData = true,
-        storage = internal.BuildStorage(),
-        hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
-        patchPlan = internal.BuildPatchPlan,
-    })
-
-    local store, session = lib.createStore(config, definition)
-    internal.store = store
-
-    lib.createModuleHost({
+    internal.host, internal.store = lib.createModule({
+        owner = internal,
         pluginGuid = PLUGIN_GUID,
-        definition = definition,
-        store = store,
-        session = session,
+        config = config,
+        definition = {
+            modpack = PACK_ID,
+            id = MODULE_ID,
+            name = "God Pool",
+            tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
+            storage = internal.BuildStorage(),
+            hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+        },
+        registerPatchMutation = internal.BuildPatchPlan,
         hookOwner = internal,
         registerHooks = internal.RegisterHooks,
+        registerIntegrations = internal.RegisterIntegrations,
         drawTab = internal.DrawTab,
         drawQuickContent = internal.DrawQuickContent,
     })
-    internal.RegisterIntegrations()
     internal.standaloneUi = lib.standaloneHost(PLUGIN_GUID)
 end
 

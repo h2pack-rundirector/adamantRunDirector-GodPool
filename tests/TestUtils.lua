@@ -156,32 +156,33 @@ function ResetGodPoolHarness(opts)
         modpack = "run-director",
         id = "GodPool",
         name = "God Pool",
-        affectsRunData = true,
         storage = internal.BuildStorage(),
         hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
-        patchPlan = internal.BuildPatchPlan,
     })
     local store, session = lib.createStore(config, definition)
     internal.store = store
 
-    if opts.registerIntegrations then
-        internal.RegisterIntegrations()
-    end
-    if opts.registerHooks then
+    if opts.registerHooks or opts.registerIntegrations then
         internal.host = lib.createModuleHost({
             pluginGuid = "adamant-RunDirector_GodPool",
             definition = definition,
             store = store,
             session = session,
+            registerPatchMutation = internal.BuildPatchPlan,
             drawTab = function() end,
             hookOwner = internal,
             registerHooks = internal.RegisterHooks,
+            registerIntegrations = opts.registerIntegrations and internal.RegisterIntegrations or nil,
         })
     end
 
     return {
         internal = internal,
         definition = definition,
+        mutationBundle = {
+            affectsRunData = true,
+            patchMutation = internal.BuildPatchPlan,
+        },
         config = config,
         store = store,
         session = session,
