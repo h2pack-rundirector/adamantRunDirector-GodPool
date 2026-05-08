@@ -28,7 +28,7 @@ function TestGodPoolLogic:testPatchPlanAppliesAndRevertsRunDataMutations()
         },
     })
 
-    local okApply, applyErr = lib.lifecycle.applyMutation(harness.definition, harness.mutationBundle, harness.store)
+    local okApply, applyErr = harness.liveHost.applyMutation()
     lu.assertTrue(okApply, tostring(applyErr))
 
     lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 1.0)
@@ -39,7 +39,7 @@ function TestGodPoolLogic:testPatchPlanAppliesAndRevertsRunDataMutations()
     lu.assertEquals(#NamedRequirementsData.HermesUpgradeRequirements, 1)
     lu.assertEquals(#NamedRequirementsData.HammerLootRequirements, 1)
 
-    local okRevert, revertErr = lib.lifecycle.revertMutation(harness.definition, harness.mutationBundle, harness.store)
+    local okRevert, revertErr = harness.liveHost.revertMutation()
     lu.assertTrue(okRevert, tostring(revertErr))
 
     lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 0.25)

@@ -152,40 +152,31 @@ function ResetGodPoolHarness(opts)
     applyOverrides(config, opts.config)
 
     local internal = RunDirectorGodPool_Internal
-    local definition = lib.prepareDefinition(internal, {
-        modpack = "run-director",
-        id = "GodPool",
-        name = "God Pool",
-        storage = internal.BuildStorage(),
-        hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+    internal.host, internal.store = lib.createModule({
+        owner = internal,
+        pluginGuid = "adamant-RunDirector_GodPool",
+        config = config,
+        definition = {
+            modpack = "run-director",
+            id = "GodPool",
+            name = "God Pool",
+            storage = internal.BuildStorage(),
+            hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
+        },
+        registerPatchMutation = internal.BuildPatchPlan,
+        registerHooks = opts.registerHooks and internal.RegisterHooks or nil,
+        registerIntegrations = opts.registerIntegrations and internal.RegisterIntegrations or nil,
+        drawTab = function() end,
     })
-    local store, session = lib.createStore(config, definition)
+    local store = internal.store
     internal.store = store
-
-    if opts.registerHooks or opts.registerIntegrations then
-        internal.host = lib.createModuleHost({
-            pluginGuid = "adamant-RunDirector_GodPool",
-            definition = definition,
-            store = store,
-            session = session,
-            registerPatchMutation = internal.BuildPatchPlan,
-            drawTab = function() end,
-            hookOwner = internal,
-            registerHooks = internal.RegisterHooks,
-            registerIntegrations = opts.registerIntegrations and internal.RegisterIntegrations or nil,
-        })
-    end
+    local liveHost = lib.getLiveModuleHost("adamant-RunDirector_GodPool")
 
     return {
         internal = internal,
-        definition = definition,
-        mutationBundle = {
-            affectsRunData = true,
-            patchMutation = internal.BuildPatchPlan,
-        },
         config = config,
         store = store,
-        session = session,
+        liveHost = liveHost,
         wrappers = registeredWraps,
     }
 end

@@ -66,7 +66,6 @@ local function init()
             hashGroupPlan = internal.BuildHashGroupPlan and internal.BuildHashGroupPlan() or nil,
         },
         registerPatchMutation = internal.BuildPatchPlan,
-        hookOwner = internal,
         registerHooks = internal.RegisterHooks,
         registerIntegrations = internal.RegisterIntegrations,
         drawTab = internal.DrawTab,
