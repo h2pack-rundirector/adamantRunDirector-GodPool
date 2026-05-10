@@ -19,9 +19,9 @@ local MODULE_ID = "GodPool"
 local PLUGIN_GUID = _PLUGIN.guid
 ---@class RunDirectorGodPoolInternal
 ---@field standaloneUi StandaloneRuntime|nil
----@field RegisterHooks fun(store: ManagedStore, host: AuthorHost)|nil
+---@field RegisterHooks fun(host: AuthorHost, store: ManagedStore)|nil
 ---@field RegisterIntegrations fun(host: AuthorHost, store: ManagedStore)|nil
----@field BuildPatchPlan fun(plan: table, store: ManagedStore)|nil
+---@field BuildPatchPlan fun(plan: table, host: AuthorHost, store: ManagedStore)|nil
 ---@field DrawTab fun(imgui: table, session: AuthorSession)|nil
 ---@field DrawQuickContent fun(imgui: table, session: AuthorSession)|nil
 ---@field IsGodEnabledInPool fun(godKey: string): boolean|nil

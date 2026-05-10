@@ -14,7 +14,7 @@ function internal.RegisterIntegrations(host, store)
                 return true
             end
             if internal.IsGodEnabledInPool then
-                return internal.IsGodEnabledInPool(godKey, store.read) ~= false
+                return internal.IsGodEnabledInPool(godKey, store) ~= false
             end
             return true
         end,

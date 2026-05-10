@@ -2,27 +2,6 @@ local internal = RunDirectorGodPool_Internal
 local godList = internal.godList
 local lootKeyLookup = internal.lootKeyLookup
 local godLookup = internal.godLookup
-local activeRead = function()
-    return nil
-end
-
-local activeIsEnabled = function()
-    return false
-end
-
-local function MakeRead(store)
-    return function(key)
-        return store.read(key)
-    end
-end
-
-local function Read(key)
-    return activeRead(key)
-end
-
-local function IsEnabled()
-    return activeIsEnabled()
-end
 
 function internal.GetRunState()
     if not CurrentRun then return nil end
@@ -35,11 +14,11 @@ function internal.GetRunState()
     return CurrentRun.RunDirector_GodPool_State
 end
 
-function internal.IsGodEnabledInPool(godKey, read)
-    read = read or activeRead
+function internal.IsGodEnabledInPool(godKey, store)
     local god = godLookup[godKey]
     if not god then return true end
-    return read(god.alias) ~= false
+    if not store then return true end
+    return store.read(god.alias) ~= false
 end
 
 local PREVENT_EARLY_REQUIREMENT = {
@@ -53,50 +32,35 @@ local PREVENT_EARLY_REQUIREMENT = {
     Value = 1,
 }
 
--- local PREVENT_EARLY_REQUIRE_NOT_ROOM_REWARD = {
---     "Boon", "SpellDrop", "Devotion", "HermesUpgrade", "WeaponUpgrade",
---     "AphroditeUpgrade", "ApolloUpgrade", "DemeterUpgrade",
---     "HephaestusUpgrade", "HestiaUpgrade", "HeraUpgrade",
---     "PoseidonUpgrade", "ZeusUpgrade", "AresUpgrade",
--- }
-
 local PREVENT_EARLY_REQUIREMENT_KEYS = {
     "SpellDropRequirements",
     "HermesUpgradeRequirements",
     "HammerLootRequirements",
 }
 
-function internal.BuildPatchPlan(plan, store)
-    local read = MakeRead(store)
-    if read("BoostElementGathering") then
+function internal.BuildPatchPlan(plan, ...)
+    local _, store = ...
+    if store.read("BoostElementGathering") then
         plan:setMany(WeaponShopItemData.ToolExorcismBook2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolShovel2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolPickaxe2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolFishingRod2, { ElementChance = 1.0 })
     end
 
-    if read("PreventEarlySeleneHermes") then
-        -- plan:set(
-        --     EncounterData.BaseArtemisCombat,
-        --     "RequireNotRoomReward",
-        --     PREVENT_EARLY_REQUIRE_NOT_ROOM_REWARD
-        -- )
+    if store.read("PreventEarlySeleneHermes") then
         for _, key in ipairs(PREVENT_EARLY_REQUIREMENT_KEYS) do
             plan:appendUnique(NamedRequirementsData, key, PREVENT_EARLY_REQUIREMENT)
         end
     end
 end
 
-function internal.RegisterHooks(store, host)
-    activeRead = MakeRead(store)
-    activeIsEnabled = host.isEnabled
-
+function internal.RegisterHooks(host, store)
     lib.hooks.Wrap(internal, "GetEligibleLootNames", function(base, excludeLootNames)
-        if not IsEnabled() then return base(excludeLootNames) end
+        if not host.isEnabled() then return base(excludeLootNames) end
 
         local state = internal.GetRunState()
         if not state then return base(excludeLootNames) end
-        state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or Read("MaxGodsPerRun")
+        state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
 
         local eligible = base(excludeLootNames)
         local filtered = {}
@@ -107,7 +71,7 @@ function internal.RegisterHooks(store, host)
                 table.insert(filtered, lootName)
             else
                 local god = lootKeyLookup[lootName]
-                if not god or internal.IsGodEnabledInPool(god.key, activeRead) then
+                if not god or internal.IsGodEnabledInPool(god.key, store) then
                     table.insert(filtered, lootName)
                 end
             end
@@ -119,7 +83,7 @@ function internal.RegisterHooks(store, host)
                 excludeSet[lootName] = true
             end
             for _, god in ipairs(godList) do
-                if internal.IsGodEnabledInPool(god.key, activeRead) and not excludeSet[god.lootKey] then
+                if internal.IsGodEnabledInPool(god.key, store) and not excludeSet[god.lootKey] then
                     table.insert(filtered, god.lootKey)
                 end
             end
@@ -134,10 +98,10 @@ function internal.RegisterHooks(store, host)
     end)
 
     lib.hooks.Wrap(internal, "ReachedMaxGods", function(base, excludedGods)
-        if not IsEnabled() then return base(excludedGods) end
+        if not host.isEnabled() then return base(excludedGods) end
         local state = internal.GetRunState()
         if not state then return base(excludedGods) end
-        local maxGods = state.MaxGodsPerRunOverride or Read("MaxGodsPerRun")
+        local maxGods = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
         local gods = {}
         for _, godName in pairs(excludedGods or {}) do gods[godName] = true end
         for _, godName in pairs(GetInteractedGodsThisRun() or {}) do gods[godName] = true end
@@ -145,18 +109,18 @@ function internal.RegisterHooks(store, host)
     end)
 
     lib.hooks.Wrap(internal, "GiveLoot", function(base, args)
-        if not IsEnabled() then return base(args) end
+        if not host.isEnabled() then return base(args) end
         local state = internal.GetRunState()
         if not state then return base(args) end
 
         local lootName = args.ForceLootName or args.Name
         if lootName and LootData[lootName] and LootData[lootName].GodLoot then
             local god = lootKeyLookup[lootName]
-            local isDisabled = god and not internal.IsGodEnabledInPool(god.key, activeRead)
-            if isDisabled and Read("KeepsakeAddsGod") then
+            local isDisabled = god and not internal.IsGodEnabledInPool(god.key, store)
+            if isDisabled and store.read("KeepsakeAddsGod") then
                 if not state.EnabledGodsOverride[lootName] then
                     state.EnabledGodsOverride[lootName] = true
-                    state.MaxGodsPerRunOverride = (state.MaxGodsPerRunOverride or Read("MaxGodsPerRun")) + 1
+                    state.MaxGodsPerRunOverride = (state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")) + 1
                 end
             end
         end
@@ -165,7 +129,7 @@ function internal.RegisterHooks(store, host)
     end)
 
     lib.hooks.Wrap(internal, "SpawnRoomReward", function(base, eventSource, args)
-        if IsEnabled() and Read("PrioritizeHammerFirstRoomEnabled") and
+        if host.isEnabled() and store.read("PrioritizeHammerFirstRoomEnabled") and
         CurrentRun and CurrentRun.CurrentRoom and CurrentRun.CurrentRoom.BiomeStartRoom then
             args = args or {}
             if args.WaitUntilPickup then
