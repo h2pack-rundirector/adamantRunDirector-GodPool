@@ -46,7 +46,7 @@ local function init()
     })
     local ui = import("mods/ui.lua").bind(data)
 
-    local host = lib.createModule({
+    local host = lib.tryCreateModule({
         owner = moduleAnchor,
         pluginGuid = PLUGIN_GUID,
         config = config,
@@ -64,7 +64,15 @@ local function init()
         drawTab = ui.drawTab,
         drawQuickContent = ui.drawQuickContent,
     })
-    host.activate()
+    if not host then
+        return
+    end
+
+    local ok = host.tryActivate()
+    if not ok then
+        return
+    end
+
     if not lib.isModuleCoordinated(PACK_ID) then
         moduleAnchor.standaloneUi = lib.standaloneHost(PLUGIN_GUID)
     else
