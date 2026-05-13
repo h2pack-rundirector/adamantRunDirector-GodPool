@@ -101,7 +101,7 @@ function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
     config.KeepsakeAddsGod = true
     config.MaxGodsPerRun = 2
 
-    ResetGodPoolHarness({
+    local harness = ResetGodPoolHarness({
         registerHooks = true,
         config = config,
         CurrentRun = {},
@@ -114,8 +114,9 @@ function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
 
     GiveLoot({ ForceLootName = "ApolloUpgrade" })
 
-    lu.assertEquals(CurrentRun.RunDirector_GodPool_State.EnabledGodsOverride.ApolloUpgrade, true)
-    lu.assertEquals(CurrentRun.RunDirector_GodPool_State.MaxGodsPerRunOverride, 3)
+    local state = harness.logic.GetRunState()
+    lu.assertEquals(state.EnabledGodsOverride.ApolloUpgrade, true)
+    lu.assertEquals(state.MaxGodsPerRunOverride, 3)
     lu.assertEquals(GetEligibleLootNames({}), {
         "ApolloUpgrade",
     })

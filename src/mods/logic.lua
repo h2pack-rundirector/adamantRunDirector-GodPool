@@ -3,17 +3,19 @@ local logic = {}
 local godList
 local lootKeyLookup
 local godLookup
+local MODULE_ID = "GodPool"
 
 local function GetRunState()
     if not CurrentRun then return nil end
-    if not CurrentRun.RunDirector_GodPool_State then
-        CurrentRun.RunDirector_GodPool_State = {
+    return lib.gameObject.get(CurrentRun, "run-director", MODULE_ID, "run", function()
+        return {
             EnabledGodsOverride = {},
             MaxGodsPerRunOverride = nil,
         }
-    end
-    return CurrentRun.RunDirector_GodPool_State
+    end)
 end
+
+logic.GetRunState = GetRunState
 
 function logic.isGodEnabledInPool(godKey, store)
     local god = godLookup[godKey]
