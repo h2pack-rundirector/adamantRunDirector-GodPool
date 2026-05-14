@@ -88,7 +88,7 @@ function ui.drawQuickContent(imgui, session)
     imgui.SameLine()
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
 
-    lib.widgets.confirmButton(imgui, "god_pool_quick_reset_all", "Reset All", {
+    lib.widgets.confirmButton(imgui, session, "god_pool_quick_reset_all", "Reset All", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
             session.resetToDefaults()
