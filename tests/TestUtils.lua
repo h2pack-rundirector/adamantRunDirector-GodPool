@@ -1,5 +1,3 @@
--- luacheck: globals MODULE_ANCHOR
-
 public = {}
 _PLUGIN = { guid = "test-god-pool" }
 
@@ -46,6 +44,7 @@ rom.mods["SGG_Modding-Chalk"] = {
 }
 
 local registeredWraps = {}
+local harnessResetCounter = 0
 
 modutil = {
     once_loaded = {
@@ -141,10 +140,10 @@ end
 
 function ResetGodPoolHarness(opts)
     opts = opts or {}
+    harnessResetCounter = harnessResetCounter + 1
+    local pluginGuid = opts.pluginGuid or ("adamant-RunDirector_GodPool:test:" .. tostring(harnessResetCounter))
     registeredWraps = {}
     installBaseGlobals(opts)
-
-    MODULE_ANCHOR = {}
 
     local data = dofile("src/mods/data.lua")
     local logic = dofile("src/mods/logic.lua").bind(data)
@@ -155,8 +154,7 @@ function ResetGodPoolHarness(opts)
     applyOverrides(config, opts.config)
 
     local host, store = lib.createModule({
-        owner = MODULE_ANCHOR,
-        pluginGuid = "adamant-RunDirector_GodPool",
+        pluginGuid = pluginGuid,
         config = config,
         definition = {
             modpack = "run-director",
@@ -171,10 +169,9 @@ function ResetGodPoolHarness(opts)
         drawTab = function() end,
     })
     host.tryActivate()
-    local liveHost = lib.getLiveModuleHost("adamant-RunDirector_GodPool")
+    local liveHost = lib.getLiveModuleHost(pluginGuid)
 
     return {
-        moduleAnchor = MODULE_ANCHOR,
         data = data,
         logic = logic,
         config = config,
