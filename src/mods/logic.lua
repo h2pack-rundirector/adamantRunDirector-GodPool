@@ -7,7 +7,7 @@ local MODULE_ID = "GodPool"
 
 local function GetRunState()
     if not CurrentRun then return nil end
-    return lib.gameObject.get(CurrentRun, "run-director", MODULE_ID, "run", function()
+    return lib.gameCache.get(CurrentRun, "run-director", MODULE_ID, "run", function()
         return {
             EnabledGodsOverride = {},
             MaxGodsPerRunOverride = nil,

@@ -156,13 +156,11 @@ function ResetGodPoolHarness(opts)
     local host, store = lib.createModule({
         pluginGuid = pluginGuid,
         config = config,
-        definition = {
-            modpack = "run-director",
-            id = "GodPool",
-            name = "God Pool",
-            storage = data.buildStorage(),
-            hashGroupPlan = data.buildHashGroupPlan(),
-        },
+        modpack = "run-director",
+        id = "GodPool",
+        name = "God Pool",
+        storage = data.buildStorage(),
+        hashGroupPlan = data.buildHashGroupPlan(),
         registerPatchMutation = logic.buildPatchPlan,
         registerHooks = opts.registerHooks and logic.registerHooks or nil,
         registerIntegrations = opts.registerIntegrations and integrations.registerIntegrations or nil,
