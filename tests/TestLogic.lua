@@ -114,7 +114,7 @@ function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
 
     GiveLoot({ ForceLootName = "ApolloUpgrade" })
 
-    local state = harness.logic.GetRunState()
+    local state = harness.logic.GetRunState(harness.authorHost)
     lu.assertEquals(state.EnabledGodsOverride.ApolloUpgrade, true)
     lu.assertEquals(state.MaxGodsPerRunOverride, 3)
     lu.assertEquals(GetEligibleLootNames({}), {
@@ -169,14 +169,24 @@ function TestGodPoolLogic:testGodAvailabilityIntegrationReflectsModuleAndGodStat
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
-    ResetGodPoolHarness({
-        registerIntegrations = true,
+    local harness = ResetGodPoolHarness({
+        registerProvider = true,
         config = config,
     })
 
-    local available = lib.integrations.invoke("run-director.god-availability", "isAvailable", true, "Apollo")
+    local available = harness.authorHost.integrations.invoke(
+        "run-director.god-availability",
+        "isAvailable",
+        true,
+        "Apollo"
+    )
     lu.assertFalse(available)
 
-    local zeusAvailable = lib.integrations.invoke("run-director.god-availability", "isAvailable", false, "Zeus")
+    local zeusAvailable = harness.authorHost.integrations.invoke(
+        "run-director.god-availability",
+        "isAvailable",
+        false,
+        "Zeus"
+    )
     lu.assertTrue(zeusAvailable)
 end

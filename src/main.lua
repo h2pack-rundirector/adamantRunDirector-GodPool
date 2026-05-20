@@ -17,11 +17,12 @@ local config = chalk.auto('config.lua')
 local PACK_ID = "run-director"
 local MODULE_ID = "GodPool"
 local PLUGIN_GUID = _PLUGIN.guid
-local standaloneUi = lib.standaloneUiBridge(PLUGIN_GUID)
 
-local function registerGui()
-    rom.gui.add_imgui(standaloneUi.renderWindow)
-    rom.gui.add_to_menu_bar(standaloneUi.addMenuBar)
+local function attachGuiOnce(host)
+    host.fallbackUi.attachGuiOnce(function(fallbackUi)
+        rom.gui.add_imgui(fallbackUi.renderWindow)
+        rom.gui.add_to_menu_bar(fallbackUi.addMenuBar)
+    end)
 end
 
 local function init()
@@ -33,7 +34,7 @@ local function init()
     })
     local ui = import("mods/ui.lua").bind(data)
 
-    local host = lib.tryCreateModule({
+    local host, store = lib.tryCreateModule({
         pluginGuid = PLUGIN_GUID,
         config = config,
         modpack = PACK_ID,
@@ -42,9 +43,6 @@ local function init()
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
         hashGroupPlan = data.buildHashGroupPlan(),
-        registerPatchMutation = logic.buildPatchPlan,
-        registerHooks = logic.registerHooks,
-        registerIntegrations = integrations.registerIntegrations,
         drawTab = ui.drawTab,
         drawQuickContent = ui.drawQuickContent,
     })
@@ -52,16 +50,18 @@ local function init()
         return
     end
 
+    attachGuiOnce(host)
+    host.mutation.patch(logic.buildPatchPlan)
+    logic.registerHooks(host, store)
+    integrations.registerProvider(host, store)
     local ok = host.tryActivate()
     if not ok then
         return
     end
-
-    lib.standaloneHost(PLUGIN_GUID)
 end
 
 local loader = reload.auto_single()
 
 modutil.once_loaded.game(function()
-    loader.load(registerGui, init)
+    loader.load(function() end, init)
 end)

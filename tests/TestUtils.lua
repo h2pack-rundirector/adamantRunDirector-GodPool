@@ -44,7 +44,6 @@ rom.mods["SGG_Modding-Chalk"] = {
 }
 
 local registeredWraps = {}
-local harnessResetCounter = 0
 
 modutil = {
     once_loaded = {
@@ -140,8 +139,7 @@ end
 
 function ResetGodPoolHarness(opts)
     opts = opts or {}
-    harnessResetCounter = harnessResetCounter + 1
-    local pluginGuid = opts.pluginGuid or ("adamant-RunDirector_GodPool:test:" .. tostring(harnessResetCounter))
+    local pluginGuid = opts.pluginGuid or "adamant-RunDirector_GodPool:test"
     registeredWraps = {}
     installBaseGlobals(opts)
 
@@ -161,19 +159,24 @@ function ResetGodPoolHarness(opts)
         name = "God Pool",
         storage = data.buildStorage(),
         hashGroupPlan = data.buildHashGroupPlan(),
-        registerPatchMutation = logic.buildPatchPlan,
-        registerHooks = opts.registerHooks and logic.registerHooks or nil,
-        registerIntegrations = opts.registerIntegrations and integrations.registerIntegrations or nil,
         drawTab = function() end,
     })
+    host.mutation.patch(logic.buildPatchPlan)
+    if opts.registerHooks then
+        logic.registerHooks(host, store)
+    end
+    if opts.registerProvider then
+        integrations.registerProvider(host, store)
+    end
     host.tryActivate()
-    local liveHost = lib.getLiveModuleHost(pluginGuid)
+    local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
 
     return {
         data = data,
         logic = logic,
         config = config,
         store = store,
+        authorHost = host,
         liveHost = liveHost,
         wrappers = registeredWraps,
     }

@@ -3,11 +3,10 @@ local logic = {}
 local godList
 local lootKeyLookup
 local godLookup
-local MODULE_ID = "GodPool"
 
-local function GetRunState()
-    if not CurrentRun then return nil end
-    return lib.gameCache.get(CurrentRun, "run-director", MODULE_ID, "run", function()
+local function GetRunState(host)
+    if not host then return nil end
+    return host.gameCache.currentRun.get("run", function()
         return {
             EnabledGodsOverride = {},
             MaxGodsPerRunOverride = nil,
@@ -57,10 +56,10 @@ function logic.buildPatchPlan(plan, _, store)
 end
 
 function logic.registerHooks(host, store)
-    lib.hooks.Wrap("GetEligibleLootNames", function(base, excludeLootNames)
+    host.hooks.wrap("GetEligibleLootNames", function(base, excludeLootNames)
         if not host.isEnabled() then return base(excludeLootNames) end
 
-        local state = GetRunState()
+        local state = GetRunState(host)
         if not state then return base(excludeLootNames) end
         state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
 
@@ -99,9 +98,9 @@ function logic.registerHooks(host, store)
         return filtered
     end)
 
-    lib.hooks.Wrap("ReachedMaxGods", function(base, excludedGods)
+    host.hooks.wrap("ReachedMaxGods", function(base, excludedGods)
         if not host.isEnabled() then return base(excludedGods) end
-        local state = GetRunState()
+        local state = GetRunState(host)
         if not state then return base(excludedGods) end
         local maxGods = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
         local gods = {}
@@ -110,9 +109,9 @@ function logic.registerHooks(host, store)
         return TableLength(gods) >= maxGods
     end)
 
-    lib.hooks.Wrap("GiveLoot", function(base, args)
+    host.hooks.wrap("GiveLoot", function(base, args)
         if not host.isEnabled() then return base(args) end
-        local state = GetRunState()
+        local state = GetRunState(host)
         if not state then return base(args) end
 
         local lootName = args.ForceLootName or args.Name
@@ -130,7 +129,7 @@ function logic.registerHooks(host, store)
         return base(args)
     end)
 
-    lib.hooks.Wrap("SpawnRoomReward", function(base, eventSource, args)
+    host.hooks.wrap("SpawnRoomReward", function(base, eventSource, args)
         if host.isEnabled() and store.read("PrioritizeHammerFirstRoomEnabled") and
         CurrentRun and CurrentRun.CurrentRoom and CurrentRun.CurrentRoom.BiomeStartRoom then
             args = args or {}
