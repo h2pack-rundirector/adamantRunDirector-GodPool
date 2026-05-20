@@ -168,7 +168,7 @@ function ResetGodPoolHarness(opts)
     if opts.registerProvider then
         integrations.registerProvider(host, store)
     end
-    host.tryActivate()
+    host.activate()
     local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
 
     return {
