@@ -26,6 +26,41 @@ end
 
 local COLORS = BuildColors()
 
+local MAX_GODS_DROPDOWN_OPTS = {
+    label = "Max Gods Per Run",
+    values = { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+    controlGap = 20,
+    controlWidth = 60,
+}
+
+local GOD_CHECKBOX_OPTS = {
+    AphroditeEnabled = { label = "Aphrodite", color = COLORS.AphroditeEnabled },
+    ApolloEnabled = { label = "Apollo", color = COLORS.ApolloEnabled },
+    AresEnabled = { label = "Ares", color = COLORS.AresEnabled },
+    DemeterEnabled = { label = "Demeter", color = COLORS.DemeterEnabled },
+    HephaestusEnabled = { label = "Hephaestus", color = COLORS.HephaestusEnabled },
+    HeraEnabled = { label = "Hera", color = COLORS.HeraEnabled },
+    HestiaEnabled = { label = "Hestia", color = COLORS.HestiaEnabled },
+    PoseidonEnabled = { label = "Poseidon", color = COLORS.PoseidonEnabled },
+    ZeusEnabled = { label = "Zeus", color = COLORS.ZeusEnabled },
+}
+
+local KEEPSAKE_ADDS_GOD_OPTS = {
+    label = "God Keepsakes Add to The Pool",
+}
+
+local PREVENT_EARLY_SELENE_HERMES_OPTS = {
+    label = "Prevent Early Selene/Hermes",
+}
+
+local BOOST_ELEMENT_GATHERING_OPTS = {
+    label = "Guarantee Element from Gathering Tool",
+}
+
+local FORCE_HAMMER_FIRST_ROOM_OPTS = {
+    label = "Force Hammer First Room",
+}
+
 local function DrawSectionHeading(draw, text)
     draw.widgets.text(text)
     draw.widgets.separator()
@@ -37,58 +72,43 @@ function ui.drawTab(draw, data)
 
     DrawSectionHeading(draw, "God Pool")
 
-    widgets.dropdown(data.get("MaxGodsPerRun"), {
-        label = "Max Gods Per Run",
-        values = { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        controlGap = 20,
-        controlWidth = 60,
-    })
+    widgets.dropdown(data.get("MaxGodsPerRun"), MAX_GODS_DROPDOWN_OPTS)
 
-    widgets.checkbox(data.get("AphroditeEnabled"), { label = "Aphrodite", color = COLORS.AphroditeEnabled })
+    widgets.checkbox(data.get("AphroditeEnabled"), GOD_CHECKBOX_OPTS.AphroditeEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("ApolloEnabled"), { label = "Apollo", color = COLORS.ApolloEnabled })
+    widgets.checkbox(data.get("ApolloEnabled"), GOD_CHECKBOX_OPTS.ApolloEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("AresEnabled"), { label = "Ares", color = COLORS.AresEnabled })
-    widgets.checkbox(data.get("DemeterEnabled"), { label = "Demeter", color = COLORS.DemeterEnabled })
+    widgets.checkbox(data.get("AresEnabled"), GOD_CHECKBOX_OPTS.AresEnabled)
+    widgets.checkbox(data.get("DemeterEnabled"), GOD_CHECKBOX_OPTS.DemeterEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("HephaestusEnabled"), { label = "Hephaestus", color = COLORS.HephaestusEnabled })
+    widgets.checkbox(data.get("HephaestusEnabled"), GOD_CHECKBOX_OPTS.HephaestusEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("HeraEnabled"), { label = "Hera", color = COLORS.HeraEnabled })
-    widgets.checkbox(data.get("HestiaEnabled"), { label = "Hestia", color = COLORS.HestiaEnabled })
+    widgets.checkbox(data.get("HeraEnabled"), GOD_CHECKBOX_OPTS.HeraEnabled)
+    widgets.checkbox(data.get("HestiaEnabled"), GOD_CHECKBOX_OPTS.HestiaEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("PoseidonEnabled"), { label = "Poseidon", color = COLORS.PoseidonEnabled })
+    widgets.checkbox(data.get("PoseidonEnabled"), GOD_CHECKBOX_OPTS.PoseidonEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("ZeusEnabled"), { label = "Zeus", color = COLORS.ZeusEnabled })
+    widgets.checkbox(data.get("ZeusEnabled"), GOD_CHECKBOX_OPTS.ZeusEnabled)
 
     imgui.Spacing()
     DrawSectionHeading(draw, "Options")
 
-    widgets.checkbox(data.get("KeepsakeAddsGod"), {
-        label = "God Keepsakes Add to The Pool",
-    })
-    widgets.checkbox(data.get("PreventEarlySeleneHermes"), {
-        label = "Prevent Early Selene/Hermes",
-    })
-    widgets.checkbox(data.get("BoostElementGathering"), {
-        label = "Guarantee Element from Gathering Tool",
-    })
-    widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), {
-        label = "Force Hammer First Room",
-    })
+    widgets.checkbox(data.get("KeepsakeAddsGod"), KEEPSAKE_ADDS_GOD_OPTS)
+    widgets.checkbox(data.get("PreventEarlySeleneHermes"), PREVENT_EARLY_SELENE_HERMES_OPTS)
+    widgets.checkbox(data.get("BoostElementGathering"), BOOST_ELEMENT_GATHERING_OPTS)
+    widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
 end
 
 function ui.drawQuickContent(draw, data)
     local imgui = draw.imgui
 
-    draw.widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), {
-        label = "Force Hammer First Room",
-    })
+    draw.widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
 
     imgui.SameLine()
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
