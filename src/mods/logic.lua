@@ -4,6 +4,10 @@ local godList
 local lootKeyLookup
 local godLookup
 
+local function ReadStore(store, alias)
+    return store.get(alias):read()
+end
+
 local function GetRunState(host)
     if not host then return nil end
     return host.cache.currentRun.get("run", function()
@@ -20,7 +24,7 @@ function logic.isGodEnabledInPool(godKey, store)
     local god = godLookup[godKey]
     if not god then return true end
     if not store then return true end
-    return store.read(god.alias) ~= false
+    return ReadStore(store, god.alias) ~= false
 end
 
 local PREVENT_EARLY_REQUIREMENT = {
@@ -41,14 +45,14 @@ local PREVENT_EARLY_REQUIREMENT_KEYS = {
 }
 
 function logic.buildPatchPlan(plan, _, store)
-    if store.read("BoostElementGathering") then
+    if ReadStore(store, "BoostElementGathering") then
         plan:setMany(WeaponShopItemData.ToolExorcismBook2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolShovel2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolPickaxe2, { ElementChance = 1.0 })
         plan:setMany(WeaponShopItemData.ToolFishingRod2, { ElementChance = 1.0 })
     end
 
-    if store.read("PreventEarlySeleneHermes") then
+    if ReadStore(store, "PreventEarlySeleneHermes") then
         for _, key in ipairs(PREVENT_EARLY_REQUIREMENT_KEYS) do
             plan:appendUnique(NamedRequirementsData, key, PREVENT_EARLY_REQUIREMENT)
         end
@@ -61,7 +65,7 @@ function logic.registerHooks(host, store)
 
         local state = GetRunState(host)
         if not state then return base(excludeLootNames) end
-        state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
+        state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or ReadStore(store, "MaxGodsPerRun")
 
         local eligible = base(excludeLootNames)
         local filtered = {}
@@ -102,7 +106,7 @@ function logic.registerHooks(host, store)
         if not host.isEnabled() then return base(excludedGods) end
         local state = GetRunState(host)
         if not state then return base(excludedGods) end
-        local maxGods = state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")
+        local maxGods = state.MaxGodsPerRunOverride or ReadStore(store, "MaxGodsPerRun")
         local gods = {}
         for _, godName in pairs(excludedGods or {}) do gods[godName] = true end
         for _, godName in pairs(GetInteractedGodsThisRun() or {}) do gods[godName] = true end
@@ -118,10 +122,10 @@ function logic.registerHooks(host, store)
         if lootName and LootData[lootName] and LootData[lootName].GodLoot then
             local god = lootKeyLookup[lootName]
             local isDisabled = god and not logic.isGodEnabledInPool(god.key, store)
-            if isDisabled and store.read("KeepsakeAddsGod") then
+            if isDisabled and ReadStore(store, "KeepsakeAddsGod") then
                 if not state.EnabledGodsOverride[lootName] then
                     state.EnabledGodsOverride[lootName] = true
-                    state.MaxGodsPerRunOverride = (state.MaxGodsPerRunOverride or store.read("MaxGodsPerRun")) + 1
+                    state.MaxGodsPerRunOverride = (state.MaxGodsPerRunOverride or ReadStore(store, "MaxGodsPerRun")) + 1
                 end
             end
         end
@@ -130,7 +134,7 @@ function logic.registerHooks(host, store)
     end)
 
     host.hooks.wrap("SpawnRoomReward", function(base, eventSource, args)
-        if host.isEnabled() and store.read("PrioritizeHammerFirstRoomEnabled") and
+        if host.isEnabled() and ReadStore(store, "PrioritizeHammerFirstRoomEnabled") and
         CurrentRun and CurrentRun.CurrentRoom and CurrentRun.CurrentRoom.BiomeStartRoom then
             args = args or {}
             if args.WaitUntilPickup then

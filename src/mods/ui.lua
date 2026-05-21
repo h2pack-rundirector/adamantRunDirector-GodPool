@@ -31,62 +31,62 @@ local function DrawSectionHeading(draw, text)
     draw.widgets.separator()
 end
 
-function ui.drawTab(draw)
+function ui.drawTab(draw, data)
     local imgui = draw.imgui
     local widgets = draw.widgets
 
     DrawSectionHeading(draw, "God Pool")
 
-    widgets.dropdown("MaxGodsPerRun", {
+    widgets.dropdown(data.get("MaxGodsPerRun"), {
         label = "Max Gods Per Run",
         values = { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         controlGap = 20,
         controlWidth = 60,
     })
 
-    widgets.checkbox("AphroditeEnabled", { label = "Aphrodite", color = COLORS.AphroditeEnabled })
+    widgets.checkbox(data.get("AphroditeEnabled"), { label = "Aphrodite", color = COLORS.AphroditeEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox("ApolloEnabled", { label = "Apollo", color = COLORS.ApolloEnabled })
+    widgets.checkbox(data.get("ApolloEnabled"), { label = "Apollo", color = COLORS.ApolloEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox("AresEnabled", { label = "Ares", color = COLORS.AresEnabled })
-    widgets.checkbox("DemeterEnabled", { label = "Demeter", color = COLORS.DemeterEnabled })
+    widgets.checkbox(data.get("AresEnabled"), { label = "Ares", color = COLORS.AresEnabled })
+    widgets.checkbox(data.get("DemeterEnabled"), { label = "Demeter", color = COLORS.DemeterEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox("HephaestusEnabled", { label = "Hephaestus", color = COLORS.HephaestusEnabled })
+    widgets.checkbox(data.get("HephaestusEnabled"), { label = "Hephaestus", color = COLORS.HephaestusEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox("HeraEnabled", { label = "Hera", color = COLORS.HeraEnabled })
-    widgets.checkbox("HestiaEnabled", { label = "Hestia", color = COLORS.HestiaEnabled })
+    widgets.checkbox(data.get("HeraEnabled"), { label = "Hera", color = COLORS.HeraEnabled })
+    widgets.checkbox(data.get("HestiaEnabled"), { label = "Hestia", color = COLORS.HestiaEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox("PoseidonEnabled", { label = "Poseidon", color = COLORS.PoseidonEnabled })
+    widgets.checkbox(data.get("PoseidonEnabled"), { label = "Poseidon", color = COLORS.PoseidonEnabled })
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox("ZeusEnabled", { label = "Zeus", color = COLORS.ZeusEnabled })
+    widgets.checkbox(data.get("ZeusEnabled"), { label = "Zeus", color = COLORS.ZeusEnabled })
 
     imgui.Spacing()
     DrawSectionHeading(draw, "Options")
 
-    widgets.checkbox("KeepsakeAddsGod", {
+    widgets.checkbox(data.get("KeepsakeAddsGod"), {
         label = "God Keepsakes Add to The Pool",
     })
-    widgets.checkbox("PreventEarlySeleneHermes", {
+    widgets.checkbox(data.get("PreventEarlySeleneHermes"), {
         label = "Prevent Early Selene/Hermes",
     })
-    widgets.checkbox("BoostElementGathering", {
+    widgets.checkbox(data.get("BoostElementGathering"), {
         label = "Guarantee Element from Gathering Tool",
     })
-    widgets.checkbox("PrioritizeHammerFirstRoomEnabled", {
+    widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), {
         label = "Force Hammer First Room",
     })
 end
 
-function ui.drawQuickContent(draw)
+function ui.drawQuickContent(draw, data)
     local imgui = draw.imgui
 
-    draw.widgets.checkbox("PrioritizeHammerFirstRoomEnabled", {
+    draw.widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), {
         label = "Force Hammer First Room",
     })
 
@@ -96,7 +96,7 @@ function ui.drawQuickContent(draw)
     draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
-            draw.session.resetToDefaults()
+            data.resetToDefaults()
         end,
     })
 end
