@@ -1,25 +1,38 @@
 local GOD_AVAILABILITY_INTEGRATION = "run-director.god-availability"
 local MODULE_ID = "GodPool"
+local GOD_AVAILABILITY_READS = {
+    "AphroditeEnabled",
+    "ApolloEnabled",
+    "AresEnabled",
+    "DemeterEnabled",
+    "HephaestusEnabled",
+    "HeraEnabled",
+    "HestiaEnabled",
+    "PoseidonEnabled",
+    "ZeusEnabled",
+}
 local integrations = {}
 local logic
 
-function integrations.registerProvider(host, store)
+function integrations.registerProvider(host)
     host.integrations.register(GOD_AVAILABILITY_INTEGRATION, {
         providerId = MODULE_ID,
-        api = {
-            isActive = function()
-                return host.isEnabled()
-            end,
-
-            isAvailable = function(godKey)
-                if not host.isEnabled() then
+        methods = {
+            isActive = {
+                handler = function()
                     return true
-                end
-                if logic and logic.isGodEnabledInPool then
-                    return logic.isGodEnabledInPool(godKey, store) ~= false
-                end
-                return true
-            end,
+                end,
+            },
+
+            isAvailable = {
+                reads = GOD_AVAILABILITY_READS,
+                handler = function(scope, godKey)
+                    if logic and logic.isGodEnabledInPool then
+                        return logic.isGodEnabledInPool(godKey, scope.read) ~= false
+                    end
+                    return true
+                end,
+            },
         },
     })
 end

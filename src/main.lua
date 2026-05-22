@@ -49,7 +49,7 @@ local function init()
     end)
     host.mutation.patch(logic.buildPatchPlan)
     logic.registerHooks(host, store)
-    integrations.registerProvider(host, store)
+    integrations.registerProvider(host)
     local ok = host.activate()
     if not ok then
         return
