@@ -66,49 +66,49 @@ local function DrawSectionHeading(draw, text)
     draw.widgets.separator()
 end
 
-function ui.drawTab(draw, data)
+function ui.drawTab(draw, state)
     local imgui = draw.imgui
     local widgets = draw.widgets
 
     DrawSectionHeading(draw, "God Pool")
 
-    widgets.dropdown(data.get("MaxGodsPerRun"), MAX_GODS_DROPDOWN_OPTS)
+    widgets.dropdown(state.get("MaxGodsPerRun"), MAX_GODS_DROPDOWN_OPTS)
 
-    widgets.checkbox(data.get("AphroditeEnabled"), GOD_CHECKBOX_OPTS.AphroditeEnabled)
+    widgets.checkbox(state.get("AphroditeEnabled"), GOD_CHECKBOX_OPTS.AphroditeEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("ApolloEnabled"), GOD_CHECKBOX_OPTS.ApolloEnabled)
+    widgets.checkbox(state.get("ApolloEnabled"), GOD_CHECKBOX_OPTS.ApolloEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("AresEnabled"), GOD_CHECKBOX_OPTS.AresEnabled)
-    widgets.checkbox(data.get("DemeterEnabled"), GOD_CHECKBOX_OPTS.DemeterEnabled)
+    widgets.checkbox(state.get("AresEnabled"), GOD_CHECKBOX_OPTS.AresEnabled)
+    widgets.checkbox(state.get("DemeterEnabled"), GOD_CHECKBOX_OPTS.DemeterEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("HephaestusEnabled"), GOD_CHECKBOX_OPTS.HephaestusEnabled)
+    widgets.checkbox(state.get("HephaestusEnabled"), GOD_CHECKBOX_OPTS.HephaestusEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("HeraEnabled"), GOD_CHECKBOX_OPTS.HeraEnabled)
-    widgets.checkbox(data.get("HestiaEnabled"), GOD_CHECKBOX_OPTS.HestiaEnabled)
+    widgets.checkbox(state.get("HeraEnabled"), GOD_CHECKBOX_OPTS.HeraEnabled)
+    widgets.checkbox(state.get("HestiaEnabled"), GOD_CHECKBOX_OPTS.HestiaEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(150)
-    widgets.checkbox(data.get("PoseidonEnabled"), GOD_CHECKBOX_OPTS.PoseidonEnabled)
+    widgets.checkbox(state.get("PoseidonEnabled"), GOD_CHECKBOX_OPTS.PoseidonEnabled)
     imgui.SameLine()
     imgui.SetCursorPosX(300)
-    widgets.checkbox(data.get("ZeusEnabled"), GOD_CHECKBOX_OPTS.ZeusEnabled)
+    widgets.checkbox(state.get("ZeusEnabled"), GOD_CHECKBOX_OPTS.ZeusEnabled)
 
     imgui.Spacing()
     DrawSectionHeading(draw, "Options")
 
-    widgets.checkbox(data.get("KeepsakeAddsGod"), KEEPSAKE_ADDS_GOD_OPTS)
-    widgets.checkbox(data.get("PreventEarlySeleneHermes"), PREVENT_EARLY_SELENE_HERMES_OPTS)
-    widgets.checkbox(data.get("BoostElementGathering"), BOOST_ELEMENT_GATHERING_OPTS)
-    widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
+    widgets.checkbox(state.get("KeepsakeAddsGod"), KEEPSAKE_ADDS_GOD_OPTS)
+    widgets.checkbox(state.get("PreventEarlySeleneHermes"), PREVENT_EARLY_SELENE_HERMES_OPTS)
+    widgets.checkbox(state.get("BoostElementGathering"), BOOST_ELEMENT_GATHERING_OPTS)
+    widgets.checkbox(state.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
 end
 
-function ui.drawQuickContent(draw, data)
+function ui.drawQuickContent(draw, state)
     local imgui = draw.imgui
 
-    draw.widgets.checkbox(data.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
+    draw.widgets.checkbox(state.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
 
     imgui.SameLine()
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
@@ -116,7 +116,7 @@ function ui.drawQuickContent(draw, data)
     draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", {
         confirmLabel = "Confirm Reset All",
         onConfirm = function()
-            data.resetToDefaults()
+            state.resetAll()
         end,
     })
 end
