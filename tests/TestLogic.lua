@@ -170,11 +170,11 @@ function TestGodPoolLogic:testGodAvailabilityIntegrationReflectsModuleAndGodStat
     config.Enabled = true
 
     local harness = ResetGodPoolHarness({
-        registerProvider = true,
+        provideGodAvailability = true,
         config = config,
     })
 
-    local available = harness.authorHost.integrations.invoke(
+    local available = harness.authorHost.integrations.poll(
         "run-director.god-availability",
         "isAvailable",
         true,
@@ -182,11 +182,20 @@ function TestGodPoolLogic:testGodAvailabilityIntegrationReflectsModuleAndGodStat
     )
     lu.assertFalse(available)
 
-    local zeusAvailable = harness.authorHost.integrations.invoke(
+    local zeusAvailable = harness.authorHost.integrations.poll(
         "run-director.god-availability",
         "isAvailable",
         false,
         "Zeus"
     )
     lu.assertTrue(zeusAvailable)
+
+    local snapshot = harness.authorHost.integrations.poll(
+        "run-director.god-availability",
+        "snapshot",
+        nil
+    )
+    lu.assertEquals(snapshot.active, true)
+    lu.assertEquals(snapshot.available.Apollo, false)
+    lu.assertEquals(snapshot.available.Zeus, true)
 end

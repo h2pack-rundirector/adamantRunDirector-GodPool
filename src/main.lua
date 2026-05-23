@@ -24,6 +24,7 @@ local function init()
     local logic = import("mods/logic.lua").bind(data)
     local integrations = import("mods/integrations.lua").bind({
         logic = logic,
+        godList = data.godList,
     })
     local ui = import("mods/ui.lua").bind(data)
 
@@ -36,6 +37,11 @@ local function init()
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
         hashGroupPlan = data.buildHashGroupPlan(),
+        onSettingsCommitted = function(host, store, commit)
+            if commit.hadConfigChanges() then
+                integrations.emitGodAvailabilityChanged(host, store)
+            end
+        end,
         drawTab = ui.drawTab,
         drawQuickContent = ui.drawQuickContent,
     })
@@ -49,11 +55,12 @@ local function init()
     end)
     host.mutation.patch(logic.buildPatchPlan)
     logic.registerHooks(host, store)
-    integrations.registerProvider(host)
+    integrations.provideGodAvailability(host)
     local ok = host.activate()
     if not ok then
         return
     end
+    integrations.emitGodAvailabilityChanged(host, store)
 end
 
 local loader = reload.auto_single()

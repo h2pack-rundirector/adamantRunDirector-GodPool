@@ -147,6 +147,7 @@ function ResetGodPoolHarness(opts)
     local logic = dofile("src/mods/logic.lua").bind(data)
     local integrations = dofile("src/mods/integrations.lua").bind({
         logic = logic,
+        godList = data.godList,
     })
     local config = dofile("src/config.lua")
     applyOverrides(config, opts.config)
@@ -159,16 +160,24 @@ function ResetGodPoolHarness(opts)
         name = "God Pool",
         storage = data.buildStorage(),
         hashGroupPlan = data.buildHashGroupPlan(),
+        onSettingsCommitted = function(host, settingsStore, commit)
+            if opts.provideGodAvailability and commit.hadConfigChanges() then
+                integrations.emitGodAvailabilityChanged(host, settingsStore)
+            end
+        end,
         drawTab = function() end,
     })
     host.mutation.patch(logic.buildPatchPlan)
     if opts.registerHooks then
         logic.registerHooks(host, store)
     end
-    if opts.registerProvider then
-        integrations.registerProvider(host)
+    if opts.provideGodAvailability then
+        integrations.provideGodAvailability(host)
     end
     host.activate()
+    if opts.provideGodAvailability then
+        integrations.emitGodAvailabilityChanged(host, store)
+    end
     local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
 
     return {
