@@ -22,7 +22,7 @@ local function init()
     import_as_fallback(rom.game)
     local data = import("mods/data.lua")
     local logic = import("mods/logic.lua").bind(data)
-    local integrations = import("mods/integrations.lua").bind({
+    local cache = import("mods/cache.lua").bind({
         logic = logic,
         godList = data.godList,
     })
@@ -39,7 +39,7 @@ local function init()
         hashGroupPlan = data.buildHashGroupPlan(),
         onSettingsCommitted = function(host, store, commit)
             if commit.hadConfigChanges() then
-                integrations.emitGodAvailabilityChanged(host, store)
+                cache.writeGodAvailability(host, store)
             end
         end,
         drawTab = ui.drawTab,
@@ -55,12 +55,12 @@ local function init()
     end)
     host.mutation.patch(logic.buildPatchPlan)
     logic.registerHooks(host, store)
-    integrations.provideGodAvailability(host)
+    cache.publishGodAvailability(host)
     local ok = host.activate()
     if not ok then
         return
     end
-    integrations.emitGodAvailabilityChanged(host, store)
+    cache.writeGodAvailability(host, store)
 end
 
 local loader = reload.auto_single()

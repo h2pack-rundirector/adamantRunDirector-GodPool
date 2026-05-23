@@ -165,36 +165,17 @@ function TestGodPoolLogic:testFirstRoomHammerOverrideMutatesRewardArgsOnlyWhenEn
     lu.assertNil(args.LootName)
 end
 
-function TestGodPoolLogic:testGodAvailabilityIntegrationReflectsModuleAndGodState()
+function TestGodPoolLogic:testGodAvailabilitySharedCacheReflectsModuleAndGodState()
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
     local harness = ResetGodPoolHarness({
-        provideGodAvailability = true,
+        pluginGuid = "adamant-RunDirector_GodPool",
+        publishGodAvailability = true,
         config = config,
     })
 
-    local available = harness.authorHost.integrations.poll(
-        "run-director.god-availability",
-        "isAvailable",
-        true,
-        "Apollo"
-    )
-    lu.assertFalse(available)
-
-    local zeusAvailable = harness.authorHost.integrations.poll(
-        "run-director.god-availability",
-        "isAvailable",
-        false,
-        "Zeus"
-    )
-    lu.assertTrue(zeusAvailable)
-
-    local snapshot = harness.authorHost.integrations.poll(
-        "run-director.god-availability",
-        "snapshot",
-        nil
-    )
+    local snapshot = harness.authorHost.cache.shared.read("run-director.god-availability", nil)
     lu.assertEquals(snapshot.active, true)
     lu.assertEquals(snapshot.available.Apollo, false)
     lu.assertEquals(snapshot.available.Zeus, true)

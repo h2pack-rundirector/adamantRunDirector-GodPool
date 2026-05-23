@@ -145,7 +145,7 @@ function ResetGodPoolHarness(opts)
 
     local data = dofile("src/mods/data.lua")
     local logic = dofile("src/mods/logic.lua").bind(data)
-    local integrations = dofile("src/mods/integrations.lua").bind({
+    local cache = dofile("src/mods/cache.lua").bind({
         logic = logic,
         godList = data.godList,
     })
@@ -158,25 +158,27 @@ function ResetGodPoolHarness(opts)
         modpack = "run-director",
         id = "GodPool",
         name = "God Pool",
+        tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
         hashGroupPlan = data.buildHashGroupPlan(),
         onSettingsCommitted = function(host, settingsStore, commit)
-            if opts.provideGodAvailability and commit.hadConfigChanges() then
-                integrations.emitGodAvailabilityChanged(host, settingsStore)
+            if opts.publishGodAvailability and commit.hadConfigChanges() then
+                cache.writeGodAvailability(host, settingsStore)
             end
         end,
         drawTab = function() end,
+        drawQuickContent = function() end,
     })
     host.mutation.patch(logic.buildPatchPlan)
     if opts.registerHooks then
         logic.registerHooks(host, store)
     end
-    if opts.provideGodAvailability then
-        integrations.provideGodAvailability(host)
+    if opts.publishGodAvailability then
+        cache.publishGodAvailability(host)
     end
     host.activate()
-    if opts.provideGodAvailability then
-        integrations.emitGodAvailabilityChanged(host, store)
+    if opts.publishGodAvailability then
+        cache.writeGodAvailability(host, store)
     end
     local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
 
