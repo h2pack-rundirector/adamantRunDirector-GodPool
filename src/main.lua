@@ -36,6 +36,11 @@ local function init()
         name = "God Pool",
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
+        actions = {
+            resetAll = function(state)
+                state.resetAll()
+            end,
+        },
         hashGroupPlan = data.buildHashGroupPlan(),
         onSettingsCommitted = function(host, store, commit)
             if commit.hadConfigChanges() then

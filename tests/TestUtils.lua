@@ -45,22 +45,26 @@ rom.mods["SGG_Modding-Chalk"] = {
 
 local registeredWraps = {}
 
+local modUtilApi = {
+    Path = {
+        Wrap = function(path, handler)
+            registeredWraps[path] = handler
+            local base = _G[path]
+            _G[path] = function(...)
+                return handler(base, ...)
+            end
+        end,
+    },
+}
 modutil = {
+    globals = _G,
+    mod = modUtilApi,
     once_loaded = {
         game = function() end,
     },
-    mod = {
-        Path = {
-            Wrap = function(path, handler)
-                registeredWraps[path] = handler
-                local base = _G[path]
-                _G[path] = function(...)
-                    return handler(base, ...)
-                end
-            end,
-        },
-    },
 }
+modutil.globals.ModUtil = modUtilApi
+ModUtil = modUtilApi
 rom.mods["SGG_Modding-ModUtil"] = modutil
 
 import = function(path, fenv, ...)
@@ -84,6 +88,7 @@ local function installBaseGlobals(opts)
     opts = opts or {}
 
     CurrentRun = opts.CurrentRun
+    rom.game.CurrentRun = CurrentRun
     WeaponShopItemData = deepCopy(opts.WeaponShopItemData or {
         ToolExorcismBook2 = { ElementChance = 0.25 },
         ToolShovel2 = { ElementChance = 0.25 },

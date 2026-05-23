@@ -61,6 +61,10 @@ local FORCE_HAMMER_FIRST_ROOM_OPTS = {
     label = "Force Hammer First Room",
 }
 
+local QUICK_RESET_ALL_CONFIRM_OPTS = {
+    confirmLabel = "Confirm Reset All",
+}
+
 local function DrawSectionHeading(draw, text)
     draw.widgets.text(text)
     draw.widgets.separator()
@@ -105,7 +109,7 @@ function ui.drawTab(draw, state)
     widgets.checkbox(state.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
 end
 
-function ui.drawQuickContent(draw, state)
+function ui.drawQuickContent(draw, state, actions)
     local imgui = draw.imgui
 
     draw.widgets.checkbox(state.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
@@ -113,12 +117,8 @@ function ui.drawQuickContent(draw, state)
     imgui.SameLine()
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
 
-    draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", {
-        confirmLabel = "Confirm Reset All",
-        onConfirm = function()
-            state.resetAll()
-        end,
-    })
+    QUICK_RESET_ALL_CONFIRM_OPTS.action = actions.get("resetAll")
+    draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", QUICK_RESET_ALL_CONFIRM_OPTS)
 end
 
 function ui.bind()
