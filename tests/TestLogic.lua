@@ -114,7 +114,7 @@ function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
 
     GiveLoot({ ForceLootName = "ApolloUpgrade" })
 
-    local state = harness.logic.GetRunState(harness.authorHost)
+    local state = harness.logic.GetRunState(harness.store)
     lu.assertEquals(state.EnabledGodsOverride.ApolloUpgrade, true)
     lu.assertEquals(state.MaxGodsPerRunOverride, 3)
     lu.assertEquals(GetEligibleLootNames({}), {
@@ -175,8 +175,8 @@ function TestGodPoolLogic:testGodAvailabilitySharedCacheReflectsModuleAndGodStat
         config = config,
     })
 
-    local snapshot = harness.authorHost.cache.shared.read("run-director.god-availability", nil)
-    lu.assertEquals(snapshot.active, true)
-    lu.assertEquals(snapshot.available.Apollo, false)
-    lu.assertEquals(snapshot.available.Zeus, true)
+    local snapshot = harness.store.cache.shared.read("GodAvailability")
+    lu.assertTrue(snapshot.active)
+    lu.assertFalse(snapshot.available.Apollo)
+    lu.assertTrue(snapshot.available.Zeus)
 end

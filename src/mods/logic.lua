@@ -3,6 +3,7 @@ local logic = {}
 local godList
 local lootKeyLookup
 local godLookup
+local runStateCacheName
 
 local function ReadValue(source, alias)
     if type(source) == "function" then
@@ -11,14 +12,9 @@ local function ReadValue(source, alias)
     return source.get(alias):read()
 end
 
-local function GetRunState(host)
-    if not host then return nil end
-    return host.cache.currentRun.get("run", function()
-        return {
-            EnabledGodsOverride = {},
-            MaxGodsPerRunOverride = nil,
-        }
-    end)
+local function GetRunState(store)
+    if not store or not store.cache then return nil end
+    return store.cache.currentRun.get(runStateCacheName)
 end
 
 logic.GetRunState = GetRunState
@@ -66,7 +62,7 @@ function logic.registerHooks(host, store)
     host.hooks.wrap("GetEligibleLootNames", function(base, excludeLootNames)
         if not host.isEnabled() then return base(excludeLootNames) end
 
-        local state = GetRunState(host)
+        local state = GetRunState(store)
         if not state then return base(excludeLootNames) end
         state.MaxGodsPerRunOverride = state.MaxGodsPerRunOverride or ReadValue(store, "MaxGodsPerRun")
 
@@ -107,7 +103,7 @@ function logic.registerHooks(host, store)
 
     host.hooks.wrap("ReachedMaxGods", function(base, excludedGods)
         if not host.isEnabled() then return base(excludedGods) end
-        local state = GetRunState(host)
+        local state = GetRunState(store)
         if not state then return base(excludedGods) end
         local maxGods = state.MaxGodsPerRunOverride or ReadValue(store, "MaxGodsPerRun")
         local gods = {}
@@ -118,7 +114,7 @@ function logic.registerHooks(host, store)
 
     host.hooks.wrap("GiveLoot", function(base, args)
         if not host.isEnabled() then return base(args) end
-        local state = GetRunState(host)
+        local state = GetRunState(store)
         if not state then return base(args) end
 
         local lootName = args.ForceLootName or args.Name
@@ -153,6 +149,7 @@ function logic.bind(data)
     godList = data.godList
     lootKeyLookup = data.lootKeyLookup
     godLookup = data.godLookup
+    runStateCacheName = data.runStateCacheName
     return logic
 end
 

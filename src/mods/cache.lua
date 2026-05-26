@@ -1,31 +1,59 @@
 local GOD_AVAILABILITY_CACHE = "run-director.god-availability"
-local DEFAULT_AVAILABILITY = {
-    active = false,
-    available = {},
-}
+local RUN_STATE_CACHE = "RunState"
+local GOD_AVAILABILITY_REF = "GodAvailability"
 local cache = {}
 local logic
 local godList
 
-local function BuildAvailabilitySnapshot(read)
+function cache.runStateName()
+    return RUN_STATE_CACHE
+end
+
+function cache.buildDeclarations(opts)
+    opts = opts or {}
+    local declarations = {
+        [RUN_STATE_CACHE] = {
+            domain = "currentRun",
+            key = "run",
+            factory = function()
+                return {
+                    EnabledGodsOverride = {},
+                    MaxGodsPerRunOverride = nil,
+                }
+            end,
+        },
+    }
+
+    if opts.includeShared == false then
+        return declarations
+    end
+
+    declarations[GOD_AVAILABILITY_REF] = {
+        domain = "shared",
+        id = GOD_AVAILABILITY_CACHE,
+        access = "owner",
+        default = {
+            active = false,
+            available = {},
+        },
+    }
+
+    return declarations
+end
+
+function cache.writeGodAvailability(store)
+    if not store or not store.cache then
+        return false
+    end
     local available = {}
     for _, god in ipairs(godList or {}) do
-        available[god.key] = logic.isGodEnabledInPool(god.key, read) ~= false
+        available[god.key] = logic.isGodEnabledInPool(god.key, store) ~= false
     end
-    return {
+    store.cache.shared.set(GOD_AVAILABILITY_REF, {
         active = true,
         available = available,
-    }
-end
-
-function cache.publishGodAvailability(host)
-    host.cache.shared.publish(GOD_AVAILABILITY_CACHE, {
-        default = DEFAULT_AVAILABILITY,
     })
-end
-
-function cache.writeGodAvailability(source, read)
-    return source.cache.shared.write(GOD_AVAILABILITY_CACHE, BuildAvailabilitySnapshot(read))
+    return true
 end
 
 function cache.bind(deps)

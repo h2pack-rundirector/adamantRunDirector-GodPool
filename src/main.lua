@@ -21,8 +21,10 @@ local PLUGIN_GUID = _PLUGIN.guid
 local function init()
     import_as_fallback(rom.game)
     local data = import("mods/data.lua")
+    local cacheModule = import("mods/cache.lua")
+    data.runStateCacheName = cacheModule.runStateName()
     local logic = import("mods/logic.lua").bind(data)
-    local cache = import("mods/cache.lua").bind({
+    local cache = cacheModule.bind({
         logic = logic,
         godList = data.godList,
     })
@@ -36,15 +38,16 @@ local function init()
         name = "God Pool",
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
+        cache = cache.buildDeclarations(),
         actions = {
-            resetAll = function(state)
+            resetAll = function(_, state)
                 state.resetAll()
             end,
         },
         hashGroupPlan = data.buildHashGroupPlan(),
-        onSettingsCommitted = function(host, store, commit)
+        onSettingsCommitted = function(_, store, commit)
             if commit.hadConfigChanges() then
-                cache.writeGodAvailability(host, store)
+                cache.writeGodAvailability(store)
             end
         end,
         drawTab = ui.drawTab,
@@ -60,12 +63,11 @@ local function init()
     end)
     host.mutation.patch(logic.buildPatchPlan)
     logic.registerHooks(host, store)
-    cache.publishGodAvailability(host)
     local ok = host.activate()
     if not ok then
         return
     end
-    cache.writeGodAvailability(host, store)
+    cache.writeGodAvailability(store)
 end
 
 local loader = reload.auto_single()

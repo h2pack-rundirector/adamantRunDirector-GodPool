@@ -149,8 +149,10 @@ function ResetGodPoolHarness(opts)
     installBaseGlobals(opts)
 
     local data = dofile("src/mods/data.lua")
+    local cacheModule = dofile("src/mods/cache.lua")
+    data.runStateCacheName = cacheModule.runStateName()
     local logic = dofile("src/mods/logic.lua").bind(data)
-    local cache = dofile("src/mods/cache.lua").bind({
+    local cache = cacheModule.bind({
         logic = logic,
         godList = data.godList,
     })
@@ -165,10 +167,13 @@ function ResetGodPoolHarness(opts)
         name = "God Pool",
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
+        cache = cache.buildDeclarations({
+            includeShared = opts.publishGodAvailability == true,
+        }),
         hashGroupPlan = data.buildHashGroupPlan(),
-        onSettingsCommitted = function(host, settingsStore, commit)
+        onSettingsCommitted = function(_, settingsStore, commit)
             if opts.publishGodAvailability and commit.hadConfigChanges() then
-                cache.writeGodAvailability(host, settingsStore)
+                cache.writeGodAvailability(settingsStore)
             end
         end,
         drawTab = function() end,
@@ -178,12 +183,9 @@ function ResetGodPoolHarness(opts)
     if opts.registerHooks then
         logic.registerHooks(host, store)
     end
-    if opts.publishGodAvailability then
-        cache.publishGodAvailability(host)
-    end
     host.activate()
     if opts.publishGodAvailability then
-        cache.writeGodAvailability(host, store)
+        cache.writeGodAvailability(store)
     end
     local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
 
