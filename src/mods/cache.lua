@@ -9,9 +9,8 @@ function cache.runStateName()
     return RUN_STATE_CACHE
 end
 
-function cache.buildDeclarations(opts)
-    opts = opts or {}
-    local declarations = {
+function cache.buildDeclarations()
+    return {
         [RUN_STATE_CACHE] = {
             domain = "currentRun",
             key = "run",
@@ -23,22 +22,16 @@ function cache.buildDeclarations(opts)
             end,
         },
     }
+end
 
-    if opts.includeShared == false then
-        return declarations
-    end
-
-    declarations[GOD_AVAILABILITY_REF] = {
-        domain = "shared",
+function cache.registerShared(host)
+    host.shared.data.owner(GOD_AVAILABILITY_REF, {
         id = GOD_AVAILABILITY_CACHE,
-        access = "owner",
         default = {
             active = false,
             available = {},
         },
-    }
-
-    return declarations
+    })
 end
 
 function cache.writeGodAvailability(store)
@@ -49,7 +42,7 @@ function cache.writeGodAvailability(store)
     for _, god in ipairs(godList or {}) do
         available[god.key] = logic.isGodEnabledInPool(god.key, store) ~= false
     end
-    store.cache.shared.set(GOD_AVAILABILITY_REF, {
+    store.shared.set(GOD_AVAILABILITY_REF, {
         active = true,
         available = available,
     })

@@ -167,9 +167,7 @@ function ResetGodPoolHarness(opts)
         name = "God Pool",
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
         storage = data.buildStorage(),
-        cache = cache.buildDeclarations({
-            includeShared = opts.publishGodAvailability == true,
-        }),
+        cache = cache.buildDeclarations(),
         hashGroupPlan = data.buildHashGroupPlan(),
         onSettingsCommitted = function(_, settingsStore, commit)
             if opts.publishGodAvailability and commit.hadConfigChanges() then
@@ -180,6 +178,9 @@ function ResetGodPoolHarness(opts)
         drawQuickContent = function() end,
     })
     host.mutation.patch(logic.buildPatchPlan)
+    if opts.publishGodAvailability then
+        cache.registerShared(host)
+    end
     if opts.registerHooks then
         logic.registerHooks(host, store)
     end

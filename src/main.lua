@@ -62,6 +62,7 @@ local function init()
         rom.gui.add_to_menu_bar(fallbackUi.addMenuBar)
     end)
     host.mutation.patch(logic.buildPatchPlan)
+    cache.registerShared(host)
     logic.registerHooks(host, store)
     local ok = host.activate()
     if not ok then

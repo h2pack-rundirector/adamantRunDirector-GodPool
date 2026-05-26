@@ -165,7 +165,7 @@ function TestGodPoolLogic:testFirstRoomHammerOverrideMutatesRewardArgsOnlyWhenEn
     lu.assertNil(args.LootName)
 end
 
-function TestGodPoolLogic:testGodAvailabilitySharedCacheReflectsModuleAndGodState()
+function TestGodPoolLogic:testGodAvailabilitySharedDataReflectsModuleAndGodState()
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
@@ -175,7 +175,7 @@ function TestGodPoolLogic:testGodAvailabilitySharedCacheReflectsModuleAndGodStat
         config = config,
     })
 
-    local snapshot = harness.store.cache.shared.read("GodAvailability")
+    local snapshot = harness.store.shared.read("GodAvailability")
     lu.assertTrue(snapshot.active)
     lu.assertFalse(snapshot.available.Apollo)
     lu.assertTrue(snapshot.available.Zeus)
