@@ -25,6 +25,11 @@ logic.isGodEnabledInPool = pool.isGodEnabledInPool
 logic.registerCache = function(module)
     module.cache.define(runState.buildCacheDeclarations())
 end
+logic.registerActivation = function(module)
+    module.onActivate(function(host, runtime)
+        shared.publish(host, runtime)
+    end)
+end
 logic.registerCommit = function(module)
     module.onCommit(function(host, runtime, commit)
         if commit.hadConfigChanges() then
@@ -38,11 +43,12 @@ end
 logic.registerShared = shared.register
 logic.registerHooks = hooks.register
 
-function logic.register(module, config)
+function logic.register(module)
     logic.registerCache(module)
+    logic.registerShared(module)
+    logic.registerActivation(module)
     logic.registerCommit(module)
     logic.registerMutation(module)
-    logic.registerShared(module, config)
     logic.registerHooks(module)
 end
 

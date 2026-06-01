@@ -186,14 +186,13 @@ function ResetGodPoolHarness(opts)
     module.data.define(data.buildStorage())
     logic.registerCache(module)
     if opts.publishGodAvailability then
+        logic.registerShared(module)
+        logic.registerActivation(module)
         logic.registerCommit(module)
     end
     module.ui.tab(function() end)
     module.ui.quickContent(function() end)
     logic.registerMutation(module)
-    if opts.publishGodAvailability then
-        logic.registerShared(module, config)
-    end
     if opts.registerHooks then
         logic.registerHooks(module)
     end

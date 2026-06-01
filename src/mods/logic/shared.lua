@@ -7,24 +7,6 @@ local GOD_AVAILABILITY_REF = "GodAvailability"
 
 local shared = {}
 
-local function isGodEnabledInConfig(god, config)
-    if config == nil then
-        return true
-    end
-    return config[god.alias] ~= false
-end
-
-local function buildGodAvailabilityFromConfig(config)
-    local available = {}
-    for _, god in ipairs(godList or {}) do
-        available[god.key] = isGodEnabledInConfig(god, config)
-    end
-    return {
-        active = true,
-        available = available,
-    }
-end
-
 local function buildGodAvailabilityFromRuntime(runtimeData)
     local available = {}
     for _, god in ipairs(godList or {}) do
@@ -36,10 +18,13 @@ local function buildGodAvailabilityFromRuntime(runtimeData)
     }
 end
 
-function shared.register(module, config)
+function shared.register(module)
     module.shared.data.owner(GOD_AVAILABILITY_REF, {
         id = GOD_AVAILABILITY_CACHE,
-        default = buildGodAvailabilityFromConfig(config),
+        default = {
+            active = false,
+            available = {},
+        },
     })
 end
 

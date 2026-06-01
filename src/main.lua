@@ -50,7 +50,7 @@ local function init()
         end,
     })
     ui.register(module)
-    logic.register(module, config)
+    logic.register(module)
 
     module.fallbackUi.attachGuiOnce(function(fallbackUi)
         rom.gui.add_imgui(fallbackUi.renderWindow)
