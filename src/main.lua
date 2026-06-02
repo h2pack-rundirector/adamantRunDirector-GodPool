@@ -21,6 +21,16 @@ local PLUGIN_GUID = _PLUGIN.guid
 local function init()
     import_as_fallback(rom.game)
 
+    local data = import("mods/data.lua")
+    local runStateCacheName = "RunState"
+    local logic = import("mods/logic.lua", nil, {
+        godList = data.godList,
+        lootKeyLookup = data.lootKeyLookup,
+        godLookup = data.godLookup,
+        runStateCacheName = runStateCacheName,
+    })
+    local ui = import("mods/ui.lua")
+
     local module = lib.createModule({
         pluginGuid = PLUGIN_GUID,
         config = config,
@@ -33,15 +43,6 @@ local function init()
         return
     end
 
-    local data = import("mods/data.lua")
-    local runStateCacheName = "RunState"
-    local logic = import("mods/logic.lua", nil, {
-        godList = data.godList,
-        lootKeyLookup = data.lootKeyLookup,
-        godLookup = data.godLookup,
-        runStateCacheName = runStateCacheName,
-    })
-    local ui = import("mods/ui.lua")
 
     module.data.define(data.buildStorage())
     module.actions.define({
@@ -49,8 +50,13 @@ local function init()
             uiData.resetAll()
         end,
     })
-    ui.register(module)
-    logic.register(module)
+    ui.attach(module)
+    logic.defineCache(module)
+    logic.attachShared(module)
+    logic.attachActivation(module)
+    logic.attachCommit(module)
+    logic.attachMutation(module)
+    logic.attachHooks(module)
 
     module.fallbackUi.attachGuiOnce(function(fallbackUi)
         rom.gui.add_imgui(fallbackUi.renderWindow)

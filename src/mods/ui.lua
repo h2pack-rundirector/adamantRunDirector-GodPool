@@ -127,7 +127,7 @@ function ui.drawQuickContent(_, uiContext)
     QUICK_RESET_ALL_CONFIRM_OPTS.action = nil
 end
 
-function ui.register(module)
+function ui.attach(module)
     module.ui.tab(ui.drawTab)
     module.ui.quickContent(ui.drawQuickContent)
 end

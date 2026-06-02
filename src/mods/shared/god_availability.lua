@@ -2,7 +2,7 @@ local deps = ...
 local godList = deps.godList
 local pool = deps.pool
 
-local GOD_AVAILABILITY_CACHE = "run-director.god-availability"
+local GOD_AVAILABILITY_SHARED_ID = "run-director.god-availability"
 local GOD_AVAILABILITY_REF = "GodAvailability"
 
 local shared = {}
@@ -18,9 +18,9 @@ local function buildGodAvailabilityFromRuntime(runtimeData)
     }
 end
 
-function shared.register(module)
+function shared.attach(module)
     module.shared.data.owner(GOD_AVAILABILITY_REF, {
-        id = GOD_AVAILABILITY_CACHE,
+        id = GOD_AVAILABILITY_SHARED_ID,
         default = {
             active = false,
             available = {},

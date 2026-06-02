@@ -184,17 +184,17 @@ function ResetGodPoolHarness(opts)
         tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
     })
     module.data.define(data.buildStorage())
-    logic.registerCache(module)
+    logic.defineCache(module)
     if opts.publishGodAvailability then
-        logic.registerShared(module)
-        logic.registerActivation(module)
-        logic.registerCommit(module)
+        logic.attachShared(module)
+        logic.attachActivation(module)
+        logic.attachCommit(module)
     end
     module.ui.tab(function() end)
     module.ui.quickContent(function() end)
-    logic.registerMutation(module)
+    logic.attachMutation(module)
     if opts.registerHooks then
-        logic.registerHooks(module)
+        logic.attachHooks(module)
     end
     module.activate()
     local liveHost = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveHost(pluginGuid)
