@@ -122,7 +122,7 @@ function ui.drawQuickContent(_, uiContext)
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
 
     if draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", QUICK_RESET_ALL_CONFIRM_OPTS) then
-        state.resetAll()
+        uiContext.resetAll()
     end
 end
 
