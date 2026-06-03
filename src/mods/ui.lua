@@ -114,7 +114,6 @@ end
 function ui.drawQuickContent(_, uiContext)
     local draw = uiContext.draw
     local state = uiContext.data
-    local actions = uiContext.actions
     local imgui = draw.imgui
 
     draw.widgets.checkbox(state.get("PrioritizeHammerFirstRoomEnabled"), FORCE_HAMMER_FIRST_ROOM_OPTS)
@@ -122,9 +121,9 @@ function ui.drawQuickContent(_, uiContext)
     imgui.SameLine()
     imgui.SetCursorPosX(imgui.GetCursorPosX() + 50)
 
-    QUICK_RESET_ALL_CONFIRM_OPTS.action = actions.get("resetAll")
-    draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", QUICK_RESET_ALL_CONFIRM_OPTS)
-    QUICK_RESET_ALL_CONFIRM_OPTS.action = nil
+    if draw.widgets.confirmButton("god_pool_quick_reset_all", "Reset All", QUICK_RESET_ALL_CONFIRM_OPTS) then
+        state.resetAll()
+    end
 end
 
 function ui.attach(module)

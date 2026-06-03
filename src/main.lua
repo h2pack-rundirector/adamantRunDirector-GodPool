@@ -45,11 +45,6 @@ local function init()
 
 
     module.data.define(data.buildStorage())
-    module.actions.define({
-        resetAll = function(host, uiData)
-            uiData.resetAll()
-        end,
-    })
     ui.attach(module)
     logic.defineCache(module)
     logic.attachShared(module)
