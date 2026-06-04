@@ -170,7 +170,7 @@ function TestGodPoolLogic:testGodAvailabilitySharedDataReflectsModuleAndGodState
     config.Enabled = true
 
     local harness = ResetGodPoolHarness({
-        pluginGuid = "adamant-RunDirector_GodPool",
+        pluginGuid = "adamantRunDirector-GodPool",
         publishGodAvailability = true,
         config = config,
     })

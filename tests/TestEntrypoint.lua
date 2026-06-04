@@ -60,13 +60,13 @@ end
 
 function TestEntrypoint:testMainLuaBootsRealModule()
     local boot = harness.bootModule({
-        pluginGuid = "adamant-RunDirector_GodPool",
+        pluginGuid = "adamantRunDirector-GodPool",
         moduleSrcDir = "src",
         configureEnv = configureGodPoolEnv,
     })
 
     lu.assertNotNil(boot.liveModule)
-    lu.assertEquals(boot.liveModule.getHostId(), "adamant-RunDirector_GodPool")
+    lu.assertEquals(boot.liveModule.getHostId(), "adamantRunDirector-GodPool")
     lu.assertEquals(boot.liveModule.getModuleId(), "GodPool")
     lu.assertEquals(boot.liveModule.getPackId(), "run-director")
     lu.assertEquals(#boot.callbacks.imgui, 1)

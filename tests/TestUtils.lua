@@ -160,7 +160,7 @@ end
 
 function ResetGodPoolHarness(opts)
     opts = opts or {}
-    local pluginGuid = opts.pluginGuid or "adamant-RunDirector_GodPool:test"
+    local pluginGuid = opts.pluginGuid or "adamantRunDirector-GodPool:test"
     registeredWraps = {}
     installBaseGlobals(opts)
 
