@@ -6,6 +6,12 @@ local runState = deps.runState
 
 local hooks = {}
 
+local function isEligibleGodLoot(lootName)
+    local lootData = LootData[lootName]
+    return lootData and not lootData.DebugOnly and lootData.GodLoot and
+        IsGameStateEligible(lootData, lootData.GameStateRequirements)
+end
+
 function hooks.register(module)
     module.hooks.wrap("GetEligibleLootNames", function(host, runtime, base, excludeLootNames)
         if not host.isEnabled() then return base(excludeLootNames) end
@@ -36,7 +42,8 @@ function hooks.register(module)
                 excludeSet[lootName] = true
             end
             for _, god in ipairs(godList) do
-                if pool.isGodEnabledInPool(god.key, data) and not excludeSet[god.lootKey] then
+                if pool.isGodEnabledInPool(god.key, data) and not excludeSet[god.lootKey] and
+                    isEligibleGodLoot(god.lootKey) then
                     table.insert(filtered, god.lootKey)
                 end
             end

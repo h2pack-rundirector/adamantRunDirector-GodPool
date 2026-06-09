@@ -42,10 +42,10 @@ function TestGodPoolLogic:testPatchPlanAppliesAndRevertsRunDataMutations()
     local okRevert, revertErr = harness.liveModule.revertMutation()
     lu.assertTrue(okRevert, tostring(revertErr))
 
-    lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 0.25)
-    lu.assertEquals(WeaponShopItemData.ToolShovel2.ElementChance, 0.25)
-    lu.assertEquals(WeaponShopItemData.ToolPickaxe2.ElementChance, 0.25)
-    lu.assertEquals(WeaponShopItemData.ToolFishingRod2.ElementChance, 0.25)
+    lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 0.5)
+    lu.assertEquals(WeaponShopItemData.ToolShovel2.ElementChance, 0.5)
+    lu.assertEquals(WeaponShopItemData.ToolPickaxe2.ElementChance, 0.5)
+    lu.assertEquals(WeaponShopItemData.ToolFishingRod2.ElementChance, 0.5)
     lu.assertEquals(#NamedRequirementsData.SpellDropRequirements, 0)
     lu.assertEquals(#NamedRequirementsData.HermesUpgradeRequirements, 0)
     lu.assertEquals(#NamedRequirementsData.HammerLootRequirements, 0)
@@ -93,6 +93,31 @@ function TestGodPoolLogic:testEligibleLootFallbackUsesEnabledGodsWhenFilterEmpti
     lu.assertEquals(GetEligibleLootNames({}), {
         "ZeusUpgrade",
     })
+end
+
+function TestGodPoolLogic:testEligibleLootFallbackPreservesBaseGameStateRequirements()
+    local config = allGodsDisabledExcept("Zeus")
+    config.Enabled = true
+
+    ResetGodPoolHarness({
+        registerHooks = true,
+        config = config,
+        CurrentRun = {},
+        LootData = {
+            ApolloUpgrade = { GodLoot = true },
+            ZeusUpgrade = { GodLoot = true, GameStateRequirements = "blocked" },
+        },
+        GetEligibleLootNames = function()
+            return {
+                "ApolloUpgrade",
+            }
+        end,
+        IsGameStateEligible = function(_, requirements)
+            return requirements ~= "blocked"
+        end,
+    })
+
+    lu.assertEquals(GetEligibleLootNames({}), {})
 end
 
 function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()

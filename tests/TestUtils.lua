@@ -98,10 +98,10 @@ local function installBaseGlobals(opts)
     CurrentRun = opts.CurrentRun
     rom.game.CurrentRun = CurrentRun
     WeaponShopItemData = deepCopy(opts.WeaponShopItemData or {
-        ToolExorcismBook2 = { ElementChance = 0.25 },
-        ToolShovel2 = { ElementChance = 0.25 },
-        ToolPickaxe2 = { ElementChance = 0.25 },
-        ToolFishingRod2 = { ElementChance = 0.25 },
+        ToolExorcismBook2 = { ElementChance = 0.5 },
+        ToolShovel2 = { ElementChance = 0.5 },
+        ToolPickaxe2 = { ElementChance = 0.5 },
+        ToolFishingRod2 = { ElementChance = 0.5 },
     })
     NamedRequirementsData = deepCopy(opts.NamedRequirementsData or {
         SpellDropRequirements = {},
@@ -140,6 +140,9 @@ local function installBaseGlobals(opts)
     end
     GetInteractedGodsThisRun = opts.GetInteractedGodsThisRun or function()
         return {}
+    end
+    IsGameStateEligible = opts.IsGameStateEligible or function()
+        return true
     end
     TableLength = tableLength
 end
