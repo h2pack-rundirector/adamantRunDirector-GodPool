@@ -34,55 +34,11 @@ rom.mods["SGG_Modding-ENVY"] = {
     end,
 }
 
-rom.mods["SGG_Modding-Chalk"] = {
-    auto = function()
-        return { DebugMode = false }
-    end,
-    original = function(config)
-        return config
-    end,
-}
-
-local registeredWraps = {}
-
-local modUtilApi = {
-    Path = {
-        Wrap = function(path, handler)
-            registeredWraps[path] = handler
-            local base = _G[path]
-            _G[path] = function(...)
-                return handler(base, ...)
-            end
-        end,
-    },
-}
-modutil = {
-    globals = _G,
-    mod = modUtilApi,
-    once_loaded = {
-        game = function() end,
-    },
-}
-modutil.globals.ModUtil = modUtilApi
-ModUtil = modUtilApi
-rom.mods["SGG_Modding-ModUtil"] = modutil
-
 import = function(path, fenv, ...)
     local localPath = "src/" .. path
-    local libPath = "../../adamant-ModpackLib/src/" .. path
-    local file = io.open(localPath, "r")
-    if file then
-        file:close()
-        local chunk = assert(loadfile(localPath, "t", fenv or _ENV))
-        return chunk(...)
-    end
-    local chunk = assert(loadfile(libPath, "t", fenv or _ENV))
+    local chunk = assert(loadfile(localPath, "t", fenv or _ENV))
     return chunk(...)
 end
-
-dofile("../../adamant-ModpackLib/src/main.lua")
-lib = public
-rom.mods["adamant-ModpackLib"] = lib
 
 local function tableLength(values)
     local count = 0
@@ -122,22 +78,6 @@ local function installBaseGlobals(opts)
         WeaponUpgrade = {},
     })
 
-    GetEligibleLootNames = opts.GetEligibleLootNames or function()
-        return {
-            "ApolloUpgrade",
-            "ZeusUpgrade",
-            "HermesUpgrade",
-        }
-    end
-    ReachedMaxGods = opts.ReachedMaxGods or function()
-        return false
-    end
-    GiveLoot = opts.GiveLoot or function(args)
-        return args
-    end
-    SpawnRoomReward = opts.SpawnRoomReward or function(_, args)
-        return args
-    end
     GetInteractedGodsThisRun = opts.GetInteractedGodsThisRun or function()
         return {}
     end
@@ -153,66 +93,135 @@ local function applyOverrides(target, overrides)
     end
 end
 
-local function getLiveStore(liveModule)
-    local registry = AdamantModpackLib_Runtime and AdamantModpackLib_Runtime.registry
-    local modules = registry and registry.modules
-    local records = modules and modules.records
-    local record = records and records[liveModule]
-    return record and record.store or nil
+local function makeRuntime(config, state)
+    local values = {}
+    applyOverrides(values, config)
+    local sharedValues = {}
+
+    return {
+        data = {
+            read = function(key)
+                return values[key]
+            end,
+            cache = {
+                currentRun = {
+                    get = function()
+                        return state
+                    end,
+                },
+            },
+        },
+        shared = {
+            set = function(key, value)
+                sharedValues[key] = value
+            end,
+            read = function(key)
+                return sharedValues[key]
+            end,
+        },
+    }
 end
 
-function ResetGodPoolHarness(opts)
+local function makeHost(enabled)
+    return {
+        isEnabled = function()
+            return enabled ~= false
+        end,
+    }
+end
+
+local function makeHookHost()
+    local wraps = {}
+    return {
+        wraps = wraps,
+        hooks = {
+            wrap = function(name, callback)
+                wraps[name] = callback
+            end,
+        },
+    }
+end
+
+function MakeGodPoolPlan()
+    local plan = {
+        setManyOps = {},
+        appendUniqueOps = {},
+    }
+
+    function plan:setMany(target, fields)
+        table.insert(self.setManyOps, {
+            target = target,
+            fields = fields,
+        })
+        for key, value in pairs(fields) do
+            target[key] = value
+        end
+    end
+
+    function plan:appendUnique(target, key, value)
+        table.insert(self.appendUniqueOps, {
+            target = target,
+            key = key,
+            value = value,
+        })
+        local list = target[key]
+        for _, existing in ipairs(list) do
+            if existing == value then
+                return
+            end
+        end
+        table.insert(list, value)
+    end
+
+    return plan
+end
+
+function ResetGodPoolLogicHarness(opts)
     opts = opts or {}
-    local pluginGuid = opts.pluginGuid or "adamantRunDirector-GodPool:test"
-    registeredWraps = {}
     installBaseGlobals(opts)
 
     local data = dofile("src/mods/data.lua")
     local runStateCacheName = "RunState"
-    local logic = import("mods/logic.lua", nil, {
-        godList = data.godList,
-        lootKeyLookup = data.lootKeyLookup,
+    local pool = import("mods/logic/pool.lua", nil, {
         godLookup = data.godLookup,
+    })
+    local runState = import("mods/logic/run_state.lua", nil, {
         runStateCacheName = runStateCacheName,
     })
-    local config = dofile("src/config.lua")
+    local hooks = import("mods/logic/hooks.lua", nil, {
+        godList = data.godList,
+        lootKeyLookup = data.lootKeyLookup,
+        pool = pool,
+        runState = runState,
+    })
+    local patches = import("mods/logic/patches.lua")
+    local shared = import("mods/shared/god_availability.lua", nil, {
+        godList = data.godList,
+        pool = pool,
+    })
+    local config = {}
     applyOverrides(config, opts.config)
 
-    local module = lib.createModule({
-        pluginGuid = pluginGuid,
-        config = config,
-        modpack = "run-director",
-        id = "GodPool",
-        name = "God Pool",
-        tooltip = "Control which gods enter the run, first-room hammer behavior, and pool support rules.",
-    })
-    module.data.define(data.buildStorage())
-    logic.defineCache(module)
-    if opts.publishGodAvailability then
-        logic.attachShared(module)
-        logic.attachActivation(module)
-        logic.attachCommit(module)
-    end
-    module.ui.tab(function() end)
-    module.ui.quickContent(function() end)
-    logic.attachMutation(module)
-    if opts.registerHooks then
-        logic.attachHooks(module)
-    end
-    module.activate()
-    local liveModule = lib.createFrameworkRuntime("adamant-ModpackFramework").modules.getLiveModule(pluginGuid)
-    local store = getLiveStore(liveModule)
+    local state = opts.runState or {
+        EnabledGodsOverride = {},
+        MaxGodsPerRunOverride = nil,
+    }
+    local runtime = makeRuntime(config, state)
+    local host = makeHost(config.Enabled ~= false)
+    local hookHost = makeHookHost()
+    hooks.register(hookHost)
 
     return {
         data = data,
-        logic = logic,
+        pool = pool,
+        runState = runState,
+        hooks = hooks,
+        hookHandlers = hookHost.wraps,
+        patches = patches,
+        shared = shared,
         config = config,
-        store = store,
-        runtime = {
-            data = store,
-        },
-        authorHost = module,
-        liveModule = liveModule,
-        wrappers = registeredWraps,
+        host = host,
+        runtime = runtime,
+        state = state,
     }
 end

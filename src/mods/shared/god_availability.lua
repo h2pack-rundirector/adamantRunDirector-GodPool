@@ -7,7 +7,7 @@ local GOD_AVAILABILITY_REF = "GodAvailability"
 
 local shared = {}
 
-local function buildGodAvailabilityFromRuntime(runtimeData)
+function shared.buildSnapshot(runtimeData)
     local available = {}
     for _, god in ipairs(godList or {}) do
         available[god.key] = pool.isGodEnabledInPool(god.key, runtimeData) ~= false
@@ -32,7 +32,7 @@ function shared.publish(_, runtime)
     if not runtime or not runtime.shared then
         return false
     end
-    runtime.shared.set(GOD_AVAILABILITY_REF, buildGodAvailabilityFromRuntime(runtime.data))
+    runtime.shared.set(GOD_AVAILABILITY_REF, shared.buildSnapshot(runtime.data))
     return true
 end
 

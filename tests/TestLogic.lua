@@ -20,16 +20,16 @@ local function allGodsDisabledExcept(enabledKey)
     return config
 end
 
-function TestGodPoolLogic:testPatchPlanAppliesAndRevertsRunDataMutations()
-    local harness = ResetGodPoolHarness({
+function TestGodPoolLogic:testPatchPlanAddsRunDataMutations()
+    local harness = ResetGodPoolLogicHarness({
         config = {
             BoostElementGathering = true,
             PreventEarlySeleneHermes = true,
         },
     })
+    local plan = MakeGodPoolPlan()
 
-    local okApply, applyErr = harness.liveModule.applyMutation()
-    lu.assertTrue(okApply, tostring(applyErr))
+    harness.patches.buildPlan(harness.host, harness.runtime, plan)
 
     lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 1.0)
     lu.assertEquals(WeaponShopItemData.ToolShovel2.ElementChance, 1.0)
@@ -38,38 +38,29 @@ function TestGodPoolLogic:testPatchPlanAppliesAndRevertsRunDataMutations()
     lu.assertEquals(#NamedRequirementsData.SpellDropRequirements, 1)
     lu.assertEquals(#NamedRequirementsData.HermesUpgradeRequirements, 1)
     lu.assertEquals(#NamedRequirementsData.HammerLootRequirements, 1)
-
-    local okRevert, revertErr = harness.liveModule.revertMutation()
-    lu.assertTrue(okRevert, tostring(revertErr))
-
-    lu.assertEquals(WeaponShopItemData.ToolExorcismBook2.ElementChance, 0.5)
-    lu.assertEquals(WeaponShopItemData.ToolShovel2.ElementChance, 0.5)
-    lu.assertEquals(WeaponShopItemData.ToolPickaxe2.ElementChance, 0.5)
-    lu.assertEquals(WeaponShopItemData.ToolFishingRod2.ElementChance, 0.5)
-    lu.assertEquals(#NamedRequirementsData.SpellDropRequirements, 0)
-    lu.assertEquals(#NamedRequirementsData.HermesUpgradeRequirements, 0)
-    lu.assertEquals(#NamedRequirementsData.HammerLootRequirements, 0)
+    lu.assertEquals(#plan.setManyOps, 4)
+    lu.assertEquals(#plan.appendUniqueOps, 3)
 end
 
 function TestGodPoolLogic:testEligibleLootFiltersDisabledGodsAndKeepsNonGodLoot()
-    ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = {
             Enabled = true,
             ApolloEnabled = false,
             ZeusEnabled = true,
         },
         CurrentRun = {},
-        GetEligibleLootNames = function()
-            return {
-                "ApolloUpgrade",
-                "ZeusUpgrade",
-                "HermesUpgrade",
-            }
-        end,
     })
 
-    lu.assertEquals(GetEligibleLootNames({}), {
+    local result = harness.hookHandlers.GetEligibleLootNames(harness.host, harness.runtime, function()
+        return {
+            "ApolloUpgrade",
+            "ZeusUpgrade",
+            "HermesUpgrade",
+        }
+    end, {})
+
+    lu.assertEquals(result, {
         "ZeusUpgrade",
         "HermesUpgrade",
     })
@@ -79,18 +70,18 @@ function TestGodPoolLogic:testEligibleLootFallbackUsesEnabledGodsWhenFilterEmpti
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
-    ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = config,
         CurrentRun = {},
-        GetEligibleLootNames = function()
-            return {
-                "ApolloUpgrade",
-            }
-        end,
     })
 
-    lu.assertEquals(GetEligibleLootNames({}), {
+    local result = harness.hookHandlers.GetEligibleLootNames(harness.host, harness.runtime, function()
+        return {
+            "ApolloUpgrade",
+        }
+    end, {})
+
+    lu.assertEquals(result, {
         "ZeusUpgrade",
     })
 end
@@ -99,25 +90,25 @@ function TestGodPoolLogic:testEligibleLootFallbackPreservesBaseGameStateRequirem
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
-    ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = config,
         CurrentRun = {},
         LootData = {
             ApolloUpgrade = { GodLoot = true },
             ZeusUpgrade = { GodLoot = true, GameStateRequirements = "blocked" },
         },
-        GetEligibleLootNames = function()
-            return {
-                "ApolloUpgrade",
-            }
-        end,
         IsGameStateEligible = function(_, requirements)
             return requirements ~= "blocked"
         end,
     })
 
-    lu.assertEquals(GetEligibleLootNames({}), {})
+    local result = harness.hookHandlers.GetEligibleLootNames(harness.host, harness.runtime, function()
+        return {
+            "ApolloUpgrade",
+        }
+    end, {})
+
+    lu.assertEquals(result, {})
 end
 
 function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
@@ -126,30 +117,32 @@ function TestGodPoolLogic:testKeepsakeCanTemporarilyAddDisabledGodToPool()
     config.KeepsakeAddsGod = true
     config.MaxGodsPerRun = 2
 
-    local harness = ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = config,
         CurrentRun = {},
-        GetEligibleLootNames = function()
-            return {
-                "ApolloUpgrade",
-            }
-        end,
     })
 
-    GiveLoot({ ForceLootName = "ApolloUpgrade" })
+    harness.hookHandlers.GiveLoot(harness.host, harness.runtime, function(args)
+        return args
+    end, { ForceLootName = "ApolloUpgrade" })
 
-    local state = harness.logic.GetRunState(harness.runtime)
+    local state = harness.runState.get(harness.runtime)
     lu.assertEquals(state.EnabledGodsOverride.ApolloUpgrade, true)
     lu.assertEquals(state.MaxGodsPerRunOverride, 3)
-    lu.assertEquals(GetEligibleLootNames({}), {
+
+    local result = harness.hookHandlers.GetEligibleLootNames(harness.host, harness.runtime, function()
+        return {
+            "ApolloUpgrade",
+        }
+    end, {})
+
+    lu.assertEquals(result, {
         "ApolloUpgrade",
     })
 end
 
 function TestGodPoolLogic:testReachedMaxGodsUsesConfiguredLimit()
-    ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = {
             Enabled = true,
             MaxGodsPerRun = 2,
@@ -163,12 +156,15 @@ function TestGodPoolLogic:testReachedMaxGodsUsesConfiguredLimit()
         end,
     })
 
-    lu.assertTrue(ReachedMaxGods({}))
+    local result = harness.hookHandlers.ReachedMaxGods(harness.host, harness.runtime, function()
+        return false
+    end, {})
+
+    lu.assertTrue(result)
 end
 
 function TestGodPoolLogic:testFirstRoomHammerOverrideMutatesRewardArgsOnlyWhenEnabled()
-    ResetGodPoolHarness({
-        registerHooks = true,
+    local harness = ResetGodPoolLogicHarness({
         config = {
             Enabled = true,
             PrioritizeHammerFirstRoomEnabled = true,
@@ -184,7 +180,9 @@ function TestGodPoolLogic:testFirstRoomHammerOverrideMutatesRewardArgsOnlyWhenEn
         WaitUntilPickup = true,
         LootName = "ZeusUpgrade",
     }
-    SpawnRoomReward(nil, args)
+    harness.hookHandlers.SpawnRoomReward(harness.host, harness.runtime, function(_, rewardArgs)
+        return rewardArgs
+    end, nil, args)
 
     lu.assertEquals(args.RewardOverride, "WeaponUpgrade")
     lu.assertNil(args.LootName)
@@ -194,13 +192,11 @@ function TestGodPoolLogic:testGodAvailabilitySharedDataReflectsModuleAndGodState
     local config = allGodsDisabledExcept("Zeus")
     config.Enabled = true
 
-    local harness = ResetGodPoolHarness({
-        pluginGuid = "adamantRunDirector-GodPool",
-        publishGodAvailability = true,
+    local harness = ResetGodPoolLogicHarness({
         config = config,
     })
 
-    local snapshot = harness.store.shared.read("GodAvailability")
+    local snapshot = harness.shared.buildSnapshot(harness.runtime.data)
     lu.assertTrue(snapshot.active)
     lu.assertFalse(snapshot.available.Apollo)
     lu.assertTrue(snapshot.available.Zeus)
