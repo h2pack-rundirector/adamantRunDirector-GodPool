@@ -52,4 +52,8 @@ local function configureGodPoolEnv(env)
     end
 end
 
-return configureGodPoolEnv
+return {
+    expectedPackId = "run-director",
+    expectedModuleId = "GodPool",
+    configureEnv = configureGodPoolEnv,
+}
