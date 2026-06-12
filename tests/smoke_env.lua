@@ -1,14 +1,4 @@
-local lu = require("luaunit")
-local function loadModpackToolsTest(name)
-    return dofile((os.getenv("MODPACK_TOOLS_DIR") or "../../ModpackTools") .. "/tests/" .. name)
-end
-
-local harness = loadModpackToolsTest("module_entrypoint_harness.lua")
-
-TestEntrypoint = {}
-
 local function configureGodPoolEnv(env)
-    env.rom.game.Color = harness.makeColorTable()
     env.CurrentRun = nil
     env.WeaponShopItemData = {
         ToolExorcismBook2 = { ElementChance = 0.25 },
@@ -62,17 +52,4 @@ local function configureGodPoolEnv(env)
     end
 end
 
-function TestEntrypoint:testMainLuaBootsRealModule()
-    local boot = harness.bootModule({
-        pluginGuid = "adamantRunDirector-GodPool",
-        moduleSrcDir = "src",
-        configureEnv = configureGodPoolEnv,
-    })
-
-    lu.assertNotNil(boot.liveModule)
-    lu.assertEquals(boot.liveModule.getOwnerId(), "adamantRunDirector-GodPool")
-    lu.assertEquals(boot.liveModule.getModuleId(), "GodPool")
-    lu.assertEquals(boot.liveModule.getPackId(), "run-director")
-    lu.assertEquals(#boot.callbacks.imgui, 1)
-    lu.assertEquals(#boot.callbacks.menuBar, 2)
-end
+return configureGodPoolEnv
